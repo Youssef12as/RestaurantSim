@@ -17,4 +17,9 @@
       <UniqueIdentifier>{28d90a00-5518-4428-b973-909207701613}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source.cpp">
+      <Filter>entities</Filter>
+    </ClCompile>
+  </ItemGroup>
 </Project>
