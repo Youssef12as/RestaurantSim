@@ -14,12 +14,35 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="entities">
-      <UniqueIdentifier>{28d90a00-5518-4428-b973-909207701613}</UniqueIdentifier>
+      <UniqueIdentifier>{9352fdfd-cbb3-4d2e-9acc-d7faa7a92a13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ds">
+      <UniqueIdentifier>{3fa4e578-4e68-4208-8a1f-2deb52a5812c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{8c707d32-baf1-4aca-92f1-008e912983bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="actions">
+      <UniqueIdentifier>{708a9d62-1699-4f50-8232-1441ef477dc9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp">
+    <ClInclude Include="entities\Order.h">
       <Filter>entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\Node.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\Action.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="core\Restaurant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core\Restaurant.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
