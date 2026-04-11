@@ -39,9 +39,15 @@
     <ClInclude Include="core\Restaurant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="entities\Chef.h">
+      <Filter>entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
