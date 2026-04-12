@@ -128,8 +128,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="actions\Action.h" />
+    <ClInclude Include="actions\CancelAction.h" />
+    <ClInclude Include="actions\RequestAction.h" />
     <ClInclude Include="core\Restaurant.h" />
+    <ClInclude Include="ds\ArrayStack.h" />
+    <ClInclude Include="ds\LinkedQueue.h" />
     <ClInclude Include="ds\Node.h" />
+    <ClInclude Include="ds\PriNode.h" />
+    <ClInclude Include="ds\PriQueue.h" />
+    <ClInclude Include="ds\QueueADT.h" />
     <ClInclude Include="entities\Chef.h" />
     <ClInclude Include="entities\Order.h" />
   </ItemGroup>

@@ -30,9 +30,6 @@
     <ClInclude Include="entities\Order.h">
       <Filter>entities</Filter>
     </ClInclude>
-    <ClInclude Include="ds\Node.h">
-      <Filter>ds</Filter>
-    </ClInclude>
     <ClInclude Include="actions\Action.h">
       <Filter>actions</Filter>
     </ClInclude>
@@ -41,6 +38,30 @@
     </ClInclude>
     <ClInclude Include="entities\Chef.h">
       <Filter>entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\Node.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\ArrayStack.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\LinkedQueue.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\PriNode.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\PriQueue.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\QueueADT.h">
+      <Filter>ds</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\CancelAction.h">
+      <Filter>actions</Filter>
+    </ClInclude>
+    <ClInclude Include="actions\RequestAction.h">
+      <Filter>actions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
