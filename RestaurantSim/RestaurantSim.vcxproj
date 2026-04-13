@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -130,7 +130,9 @@
     <ClInclude Include="actions\Action.h" />
     <ClInclude Include="actions\CancelAction.h" />
     <ClInclude Include="actions\RequestAction.h" />
+    <ClInclude Include="CookingOrders.h" />
     <ClInclude Include="core\Restaurant.h" />
+    <ClInclude Include="DEFS.h" />
     <ClInclude Include="ds\ArrayStack.h" />
     <ClInclude Include="ds\LinkedQueue.h" />
     <ClInclude Include="ds\Node.h" />
@@ -139,10 +141,15 @@
     <ClInclude Include="ds\QueueADT.h" />
     <ClInclude Include="entities\Chef.h" />
     <ClInclude Include="entities\Order.h" />
+    <ClInclude Include="derivedQueue.h" />
+    <ClInclude Include="Fit_Table.h" />
+    <ClInclude Include="PriorityParameters.h" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

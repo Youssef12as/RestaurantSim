@@ -25,6 +25,12 @@
     <Filter Include="actions">
       <UniqueIdentifier>{708a9d62-1699-4f50-8232-1441ef477dc9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{4acf6d74-d92c-4160-a267-567233bcba73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Derived ds">
+      <UniqueIdentifier>{be7a3f28-d81b-495c-be47-715fbf2ac39b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="entities\Order.h">
@@ -63,6 +69,24 @@
     <ClInclude Include="actions\RequestAction.h">
       <Filter>actions</Filter>
     </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="DEFS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="derivedQueue.h">
+      <Filter>Derived ds</Filter>
+    </ClInclude>
+    <ClInclude Include="Fit_Table.h">
+      <Filter>Derived ds</Filter>
+    </ClInclude>
+    <ClInclude Include="CookingOrders.h">
+      <Filter>Derived ds</Filter>
+    </ClInclude>
+    <ClInclude Include="PriorityParameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp">
@@ -70,6 +94,9 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>UI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
