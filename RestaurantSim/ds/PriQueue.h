@@ -73,6 +73,10 @@ public:
             ptr = ptr->getNext();
         }
     }
+
+    int GetCount() const {
+        return count;
+    }
 };
 
 template <typename T>

@@ -1,12 +1,12 @@
 #pragma once
-#include <iostream>
-#include "DEFS.h"
-#include"./ds/LinkedQueue.h"
-#include"./ds/PriQueue.h"
-#include"./ds/ArrayStack.h"
-#include"derivedQueue.h"
-#include"CookingOrders.h"
-#include"Fit_Table.h"
+#include "../DEFS.h"
+#include"../ds/LinkedQueue.h"
+#include"../ds/PriQueue.h"
+#include"../ds/ArrayStack.h"
+#include"../Derived DS/derivedQueue.h"
+#include"../Derived DS/CookingOrders.h"
+#include"../Derived DS/Fit_Table.h"
+#include "../PriorityParameters.h"
 using namespace std;
 
 class Action;

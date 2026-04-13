@@ -1,8 +1,8 @@
 #pragma once
-#include "ds/PriQueue.h"
-#include "ds/LinkedQueue.h"
-#include "PriorityParameters.h"
-#include "entities/Table.h"
+#include "../ds/PriQueue.h"
+#include "../ds/LinkedQueue.h"
+#include "../PriorityParameters.h"
+#include "../entities/Table.h"
 
 class Fit_Tables : public priQueue<TablePriorityItem>
 {

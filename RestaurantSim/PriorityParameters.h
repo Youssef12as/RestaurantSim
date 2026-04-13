@@ -1,7 +1,7 @@
 #pragma once
-#include"entities/Order.h"
-#include "entities/Scooter.h"
-#include"entites/Table.h"
+//#include "../entities/Scooter.h"
+#include "../entities/Table.h"
+#include "../RestaurantSim/entities/Order.h"
 
 struct OVGPriorityItem
 {

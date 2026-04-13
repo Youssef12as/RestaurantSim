@@ -1,8 +1,8 @@
 #pragma once
-#include "ds/PriQueue.h"
-#include "entities/Order.h"
-#include "PriorityParameters.h"
-#include "ds/LinkedQueue.h"
+#include "../ds/PriQueue.h"
+#include "../entities/Order.h"
+#include "../PriorityParameters.h"
+#include "../ds/LinkedQueue.h"
 
 class CookingOrders : public priQueue<CookingPriorityItem>
 {

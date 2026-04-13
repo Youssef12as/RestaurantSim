@@ -43,7 +43,6 @@ Single Node Case:
 
 #include "Node.h"
 #include "QueueADT.h"
-#include <vector>
 using namespace std;
 
 
@@ -110,7 +109,7 @@ Output: True if the operation is successful; otherwise false.
 template <typename T>
 bool LinkedQueue<T>::enqueue(const T& newEntry)
 {
-	Node<T>* newNodePtr = new Node<T>(newEntry);
+	Node<T>* newNodePtr = new Node<T>(newEntry); //shalow copy for the pointer of the order (perfect)
 	// Insert the new node
 	if (isEmpty())	//special case if this is the first node to insert
 		frontPtr = newNodePtr; // The queue is empty
