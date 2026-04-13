@@ -1,4 +1,9 @@
 #include <iostream>
+#include <cmath>
+#include <string>
+#include "../RestaurantSim/ds/LinkedQueue.h"
+#include "../RestaurantSim/ds/ArrayStack.h"
+#include "../RestaurantSim/ds/PriQueue.h"
 
 int main() {
 	std::cout << "Welcome to the Restaurant Simulation!" << std::endl;

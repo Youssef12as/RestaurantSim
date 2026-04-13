@@ -34,14 +34,14 @@ private:
     Table* assignedTable;
 
 public:
-    Order() :
+    Order() : //default
         id(0), type(""), size(0), price(0),
         seats(0), duration(0), canShare(false),
         distance(0), TQ(0), TA(-1), TR(-1), TS(-1), TF(-1),
         assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
     }
 
-    Order(int id, string type, int TQ, int size, float price) :
+    Order(int id, string type, int TQ, int size, float price) :  //OT
         id(id), type(type), TQ(TQ), size(size), price(price),
         seats(0), duration(0), canShare(false),
         distance(0), TA(-1), TR(-1), TS(-1), TF(-1),
@@ -49,14 +49,14 @@ public:
     }
 
     Order(int id, string type, int TQ, int size, float price,
-        int seats, int duration, bool canShare) :
+        int seats, int duration, bool canShare) :  //OD
         id(id), type(type), TQ(TQ), size(size), price(price),
         seats(seats), duration(duration), canShare(canShare),
         distance(0), TA(-1), TR(-1), TS(-1), TF(-1),
         assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
     }
 
-    Order(int id, string type, int TQ, int size, float price, float distance) :
+    Order(int id, string type, int TQ, int size, float price, float distance) :  //OV
         id(id), type(type), TQ(TQ), size(size), price(price),
         seats(0), duration(0), canShare(false),
         distance(distance), TA(-1), TR(-1), TS(-1), TF(-1),
