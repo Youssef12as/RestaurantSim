@@ -69,22 +69,31 @@
     <ClInclude Include="actions\RequestAction.h">
       <Filter>actions</Filter>
     </ClInclude>
-    <ClInclude Include="UI.h">
-      <Filter>UI</Filter>
-    </ClInclude>
     <ClInclude Include="DEFS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="derivedQueue.h">
-      <Filter>Derived ds</Filter>
-    </ClInclude>
-    <ClInclude Include="Fit_Table.h">
-      <Filter>Derived ds</Filter>
-    </ClInclude>
-    <ClInclude Include="CookingOrders.h">
-      <Filter>Derived ds</Filter>
-    </ClInclude>
     <ClInclude Include="PriorityParameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\UI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Derived DS\CookingOrders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Derived DS\derivedQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Derived DS\Fit_Table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ds\StackADT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entities\Table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entities\Scooter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,8 +104,8 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
-      <Filter>UI</Filter>
+    <ClCompile Include="core\UI.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

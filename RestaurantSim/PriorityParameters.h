@@ -1,5 +1,5 @@
 #pragma once
-//#include "../entities/Scooter.h"
+#include "../entities/Scooter.h"
 #include "../entities/Table.h"
 #include "../RestaurantSim/entities/Order.h"
 
