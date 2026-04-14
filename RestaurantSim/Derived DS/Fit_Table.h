@@ -1,10 +1,10 @@
 #pragma once
 #include "../ds/PriQueue.h"
 #include "../ds/LinkedQueue.h"
-#include "../PriorityParameters.h"
+//#include "../PriorityParameters.h"
 #include "../entities/Table.h"
 
-class Fit_Tables : public priQueue<TablePriorityItem>
+class Fit_Tables : public priQueue<Table*>
 {
 public:
     Table* GetBest(int requiredSeats)
@@ -12,31 +12,28 @@ public:
         if (isEmpty()) return nullptr;
 
         Table* bestTable = nullptr;
-        LinkedQueue<TablePriorityItem> tempQueue; // temporaty Queue for not enough seats
+        LinkedQueue<Table*> tempQueue; // temporaty Queue for not enough seats
 
         while (!isEmpty())
         {
-            TablePriorityItem currentItem;
+            Table* currentItem = nullptr;
             int pri = 0;
             dequeue(currentItem, pri);
 
-            int freeSeats = currentItem.tablePtr->GetFreeSeats(); 
-
-            if (freeSeats >= requiredSeats)
+            if (currentItem && currentItem->GetFreeSeats() >= requiredSeats)
             {
-                bestTable = currentItem.tablePtr;
+                bestTable = currentItem;
                 break;
             }
             tempQueue.enqueue(currentItem); //  if not found value > required seats
         }
         while (!tempQueue.isEmpty()) // for restoring back onto priQueue
         {
-            TablePriorityItem itemTable;
+            Table* itemTable=nullptr;
             tempQueue.dequeue(itemTable);
 
-            int freeSeats = itemTable.tablePtr->GetFreeSeats();   
-            itemTable.priorityValue = -freeSeats; //for the best fit table(highest priority)
-            enqueue(itemTable, itemTable.priorityValue);
+            if (itemTable)
+                enqueue(itemTable, -itemTable->GetFreeSeats());//for the best fit table(highest priority)
         }
         return bestTable;
     }
