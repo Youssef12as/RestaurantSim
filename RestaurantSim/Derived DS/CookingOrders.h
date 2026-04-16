@@ -37,11 +37,12 @@ public:
         {
             Order* orderPtr = nullptr;
             tempQueue.dequeue(orderPtr);
-            if (orderPtr) 
+            if (orderPtr)
             {
                 Chef* chefPtr = orderPtr->getAssignedChef();
-                 if (chefPtr) 
-                     enqueue(orderPtr, -orderPtr->getExpectedFinishTime(chefPtr->getSpeed()));
+                if (chefPtr)
+                    enqueue(orderPtr, -orderPtr->getExpectedFinishTime(chefPtr->getSpeed()));
+            }
         }
         return found;
     }
