@@ -1,10 +1,9 @@
 #pragma once
 #include "../ds/PriQueue.h"
 #include "../entities/Order.h"
-#include "../PriorityParameters.h"
 #include "../ds/LinkedQueue.h"
-
-class CookingOrders : public priQueue<CookingPriorityItem>
+#include"../entities/Chef.h"
+class CookingOrders : public priQueue<Order*>
 {
 public:
     bool CancelOrder(int id, Order*& cancelledOrder)
@@ -13,28 +12,36 @@ public:
         if (isEmpty()) return false;
 
         bool found = false;
-        LinkedQueue<CookingPriorityItem> tempQueue; // for holding items while searching for the id
-        while (!isEmpty())
+        LinkedQueue<Order*> tempQueue;
+        while(!isEmpty())
         {
-            CookingPriorityItem currentItem;
+            Order* currentOrder=nullptr;
             int pri = 0;
-            dequeue(currentItem, pri);
+            dequeue(currentOrder, pri);
 
-            if (!found && currentItem.orderPtr && currentItem.orderPtr->getID() == id)
+            if (!found && currentOrder && currentOrder->getID() == id)
             {
-                cancelledOrder = currentItem.orderPtr;
+                cancelledOrder = currentOrder;
                 found = true;
+
+                //Released its Chef
+                Chef* chefPtr = currentOrder->getAssignedChef();
+                if (chefPtr) chefPtr->releaseOrder();
             }
             else
             {
-                tempQueue.enqueue(currentItem); // if not found ID
+                tempQueue.enqueue(currentOrder); // if not found ID
             }
         }
         while (!tempQueue.isEmpty()) // for restoring back into priQueue
         {
-            CookingPriorityItem item;
-            tempQueue.dequeue(item);
-            enqueue(item, -item.finishTime);
+            Order* orderPtr = nullptr;
+            tempQueue.dequeue(orderPtr);
+            if (orderPtr) 
+            {
+                Chef* chefPtr = orderPtr->getAssignedChef();
+                 if (chefPtr) 
+                     enqueue(orderPtr, -orderPtr->getExpectedFinishTime(chefPtr->getSpeed()));
         }
         return found;
     }
