@@ -6,129 +6,92 @@
 using namespace std;
 
 class Chef;
-class Scooter;
 class Table;
+class Scooter;
 
 class Order {
-private:
-    int    id;
+protected:
+    int id;
     string type;
+    int size;
+    float price;
 
-    int    size;
-    float  price;
-
-    int    seats;
-    int    duration;
-    bool   canShare;
-
-    float  distance;
-
-    int    TQ;
-    int    TA;
-    int    TR;
-    int    TS;
-    int    TF;
-
+    int TQ, TA, TR, TS, TF;
     Chef* assignedChef;
-    Scooter* assignedScooter;
-    Table* assignedTable;
 
 public:
-    Order() : //default
-        id(0), type(""), size(0), price(0),
-        seats(0), duration(0), canShare(false),
-        distance(0), TQ(0), TA(-1), TR(-1), TS(-1), TF(-1),
-        assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
+    Order(int id, string type, int TQ, int size, float price)
+        : id(id), type(type), TQ(TQ), size(size), price(price),
+        TA(-1), TR(-1), TS(-1), TF(-1), assignedChef(nullptr) {
     }
 
-    Order(int id, string type, int TQ, int size, float price) :  //OT
-        id(id), type(type), TQ(TQ), size(size), price(price),
-        seats(0), duration(0), canShare(false),
-        distance(0), TA(-1), TR(-1), TS(-1), TF(-1),
-        assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
-    }
+    virtual ~Order() {}
 
-    Order(int id, string type, int TQ, int size, float price,
-        int seats, int duration, bool canShare) :  //OD
-        id(id), type(type), TQ(TQ), size(size), price(price),
-        seats(seats), duration(duration), canShare(canShare),
-        distance(0), TA(-1), TR(-1), TS(-1), TF(-1),
-        assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
-    }
-
-    Order(int id, string type, int TQ, int size, float price, float distance) :  //OV
-        id(id), type(type), TQ(TQ), size(size), price(price),
-        seats(0), duration(0), canShare(false),
-        distance(distance), TA(-1), TR(-1), TS(-1), TF(-1),
-        assignedChef(nullptr), assignedScooter(nullptr), assignedTable(nullptr) {
-    }
-
-    int    getID()       const { return id; }
-    string getType()     const { return type; }
-    int    getSize()     const { return size; }
-    float  getPrice()    const { return price; }
-    int    getSeats()    const { return seats; }
-    int    getDuration() const { return duration; }
-    bool   getCanShare() const { return canShare; }
-    float  getDistance() const { return distance; }
-
-    int    getTQ() const { return TQ; }
-    int    getTA() const { return TA; }
-    int    getTR() const { return TR; }
-    int    getTS() const { return TS; }
-    int    getTF() const { return TF; }
-
-    Chef* getAssignedChef()    const { return assignedChef; }
-    Scooter* getAssignedScooter() const { return assignedScooter; }
-    Table* getAssignedTable()   const { return assignedTable; }
+    int getID() const { return id; }
+    string getType() const { return type; }
+    int getSize() const { return size; }
+    float getPrice() const { return price; }
+    int getTQ() const { return TQ; }
+    int getTA() const { return TA; }
+    int getTR() const { return TR; }
+    int getTS() const { return TS; }
+    int getTF() const { return TF; }
+    Chef* getAssignedChef() const { return assignedChef; }
 
     void setTA(int t) { TA = t; }
     void setTR(int t) { TR = t; }
     void setTS(int t) { TS = t; }
     void setTF(int t) { TF = t; }
-
     void setAssignedChef(Chef* c) { assignedChef = c; }
-    void setAssignedScooter(Scooter* s) { assignedScooter = s; }
-    void setAssignedTable(Table* t) { assignedTable = t; }
+
 
     int getTi() const {
-        if (TA == -1 || TS == -1 || TR == -1) return -1;
-        return (TA - TQ) + (TS - TR);
+        if (TA == -1 || TS == -1 || TR == -1) {
+            return -1;
+        }
+        else {
+            return (TA - TQ) + (TS - TR);
+        }
     }
 
     int getTc() const {
-        if (TA == -1 || TR == -1) return -1;
-        return TR - TA;
+        if (TA == -1 || TR == -1) {
+            return -1;
+        }
+        else {
+            return TR - TA;
+        }
     }
 
     int getTw() const {
-        if (getTi() == -1 || getTc() == -1) return -1;
-        return getTi() + getTc();
+        if (getTi() == -1 || getTc() == -1) {
+            return -1;
+        }
+        else {
+            return getTi() + getTc();
+        }
     }
 
     int getTserv() const {
-        if (TS == -1 || TF == -1) return -1;
-        return TF - TS;
+        if (TS == -1 || TF == -1) {
+            return -1;
+        }
+        else {
+            return TF - TS;
+        }
     }
 
     int getExpectedFinishTime(float chefSpeed) const {
-        if (TA == -1) return -1;
-        return TA + (int)ceil((float)size / chefSpeed);
+        if (TA == -1) {
+            return -1;
+        }
+        else {
+            return TA + (int)ceil((float)size / chefSpeed);
+        }
     }
 
-    float getOVGPriority(float w1, float w2, float w3) const {
-        return w1 * price + w2 * size - w3 * distance;
-    }
-
-    bool isDineIn()   const { return type == "ODG" || type == "ODN"; }
-    bool isTakeaway() const { return type == "OT"; }
-    bool isDelivery() const { return type == "OVC" || type == "OVG" || type == "OVN"; }
-    bool isGold()     const { return type == "ODG" || type == "OVG"; }
-    bool isNormal()   const { return type == "ODN" || type == "OVN"; }
-    bool isVIP()      const { return type == "OVC"; }
-
-    void print() const {
-        cout << id;
+    virtual void print() const {
+        cout << id << ", ";
     }
 
     friend ostream& operator<<(ostream& out, const Order* o) {
@@ -136,11 +99,53 @@ public:
         o->print();
         return out;
     }
+};
 
-    void printOutputLine() const {
-        cout << TF << " " << id << " " << TQ << " "
-            << TA << " " << TR << " " << TS << " "
-            << getTi() << " " << getTc() << " "
-            << getTw() << " " << getTserv() << "\n";
+class DineInOrder : public Order {
+private:
+    int seats;
+    int duration;
+    bool canShare;
+    Table* assignedTable;
+
+public:
+    DineInOrder(int id, string type, int TQ, int size, float price, int seats, int duration, bool canShare)
+        : Order(id, type, TQ, size, price), seats(seats), duration(duration),
+        canShare(canShare), assignedTable(nullptr) {
     }
+
+    int getSeats() const { return seats; }
+    int getDuration() const { return duration; }
+    bool getCanShare() const { return canShare; }
+    Table* getAssignedTable() const { return assignedTable; }
+    void setAssignedTable(Table* t) { assignedTable = t; }
+
+};
+
+class DeliveryOrder : public Order {
+private:
+    float distance;
+    Scooter* assignedScooter;
+
+public:
+    DeliveryOrder(int id, string type, int TQ, int size, float price, float distance)
+        : Order(id, type, TQ, size, price), distance(distance), assignedScooter(nullptr) {
+    }
+
+    float getDistance() const { return distance; }
+    Scooter* getAssignedScooter() const { return assignedScooter; }
+    void setAssignedScooter(Scooter* s) { assignedScooter = s; }
+
+    float getOVGPriority(float w1, float w2, float w3) const {
+        return w1 * price + w2 * size - w3 * distance;
+    }
+
+};
+
+class TakeawayOrder : public Order {
+public:
+    TakeawayOrder(int id, string type, int TQ, int size, float price)
+        : Order(id, type, TQ, size, price) {
+    }
+
 };

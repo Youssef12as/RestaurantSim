@@ -27,8 +27,12 @@ public:
 
     int GetFreeSeats() const { return FreeSeats; }
 
-    void setBusySeats(int seats) {
-        if(seats >= FreeSeats) FreeSeats -= seats;
+    bool setBusySeats(int seats) {
+        if (seats <= FreeSeats && seats > 0) {
+            FreeSeats -= seats;
+            return true; 
+        }
+        return false;
     }
 
     void freeSeats(int seats) {  // this is for freeing seats when a order is finished (pass the order seats)
