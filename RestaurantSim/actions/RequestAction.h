@@ -73,9 +73,9 @@ public:
 		return TQ;
 	}
 
+	void print() const override {
+		cout << "[" << TYP << ", " << TQ << ", " << ID << "], ";
+	}
 	
-
-
-
 };
 

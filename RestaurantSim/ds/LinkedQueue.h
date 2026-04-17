@@ -43,6 +43,9 @@ Single Node Case:
 
 #include "Node.h"
 #include "QueueADT.h"
+#include "../actions/Action.h"
+
+#include <iostream>
 using namespace std;
 
 
@@ -61,7 +64,7 @@ public:
 	bool dequeue(T& frntEntry);
 	bool peek(T& frntEntry)  const;
 	int GetCount() const;
-	void print() const;
+	virtual void print() const;
 	~LinkedQueue();
 
 	//copy constructor
@@ -212,17 +215,24 @@ LinkedQueue<T>::LinkedQueue(const LinkedQueue<T>& LQ)
 /*
 Function: print
 */
-
 template <typename T>
 void LinkedQueue<T>::print() const
 {
 	Node<T>* NodePtr = frontPtr;
-	cout << endl;
-	while (NodePtr) {
-		cout << "Item: " << NodePtr->getItem() << endl;
-		NodePtr = NodePtr->getNext();
+	if (std::is_same<T, Action*>::value) {
+		int printed = 0;
+		while (NodePtr && printed < 10) {
+			cout << NodePtr->getItem();
+			NodePtr = NodePtr->getNext();
+			++printed;
+		}
 	}
-	
+	else {
+		while (NodePtr) {
+			cout << NodePtr->getItem();
+			NodePtr = NodePtr->getNext();
+		}
+	}
 }
 
 

@@ -58,24 +58,28 @@ void UI::PrintEndSilent()const
     cout << "Simulation ends, Output file created" << endl;
 }
 
-void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<OVGPriorityItem>& pOVG, LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds, LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, LinkedQueue<Order*>& rOVG, LinkedQueue<Order*>& rOVN, derivedQueue& rOVC, priQueue<ScooterPriorityItem>& availScooters, LinkedQueue<Scooter*>& maintScooters, LinkedQueue<Scooter*>& backScooters, Fit_Tables& availTables, priQueue<InServicePriorityItem>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
+void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
+    LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
+    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, LinkedQueue<Order*>& rOVG, LinkedQueue<Order*>& rOVN, derivedQueue& rOVC,
+    priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, LinkedQueue<Scooter*>& backScooters
+    , Fit_Tables& availTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
     cout << "\nCurrent Timestep: " << timestep << "\n";
 
     cout << "===============   Actions List   ================ \n";
-    cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";
+    cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
     cout << "—-------------     Pending Orders IDs —--------------------- \n";
-    cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n";
-    cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n";
-    cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n";
-    cout << pOVN.GetCount() << " OVN: "; pOVN.print(); cout << "\n";
-    cout << pOVC.GetCount() << " OVC: "; pOVC.print(); cout << "\n";
-    cout << pOVG.GetCount() << " OVG: "; pOVG.print(); cout << "\n";
+    cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n";   //done
+    cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n";   //done
+    cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n";    //done
+    cout << pOVN.GetCount() << " OVN: "; pOVN.print(); cout << "\n";    //done
+    cout << pOVC.GetCount() << " OVC: "; pOVC.print(); cout << "\n";    //done
+    cout << pOVG.GetCount() << " OVG: "; pOVG.print(); cout << "\n";    //done
 
     cout << "—-------------   Available chefs IDs —---------------------- \n";
-    cout << freeCS.GetCount() << " CS: "; freeCS.print(); cout << "\n";
-    cout << freeCN.GetCount() << " CN: "; freeCN.print(); cout << "\n";
+    cout << freeCS.GetCount() << " CS: "; freeCS.print(); cout << "\n"; //done
+    cout << freeCN.GetCount() << " CN: "; freeCN.print(); cout << "\n"; //done
 
     cout << "—-------------     Cooking orders [Orders ID, chef ID] —--------------------- \n";
     cout << cookingOrds.GetCount() << " cooking orders: "; cookingOrds.print(); cout << "\n";

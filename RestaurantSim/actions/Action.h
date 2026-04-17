@@ -1,7 +1,8 @@
 #pragma once
 
 class Restaurant;
-
+#include <iostream>
+using namespace std;
 
 class Action
 {
@@ -14,6 +15,13 @@ public:
 	}
 
 	virtual void Act() = 0; // overwrite for each dervide classs
+
+	virtual void print() const {  // override this for each class
+	}
+
+	friend ostream& operator<<(ostream& out, const Action* act) {	// polymorphism using reference
+		act->print();
+	}
 
 	// more functions will be added if needed
 };

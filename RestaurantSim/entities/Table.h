@@ -1,41 +1,52 @@
 #pragma once
 using namespace std;
+#include <iostream>
 
 class Table {
 private:
+    int id;
     int Capacity;
-    int BusySeats;
+    int FreeSeats;
+
+    static int TableCount;
 
 public:
     Table() :
-        Capacity(0), BusySeats(0) {
+        Capacity(0), FreeSeats(0) {
+        id = TableCount++;
     }
 
     Table(int cap) :
-        Capacity(cap), BusySeats(0) {
+        Capacity(cap), FreeSeats(cap) {
+        id = TableCount++;
     }
 
     int getCapacity() const { return Capacity; }
 
-    int getBusySeats() const { return BusySeats; }
+    int getBusySeats() const { return Capacity - FreeSeats; }
 
-    int GetFreeSeats() const { return Capacity - BusySeats; }
+    int GetFreeSeats() const { return FreeSeats; }
 
     void setBusySeats(int seats) {
-        BusySeats = Capacity - seats;
-        if (BusySeats < 0) {
-            BusySeats = Capacity;
-        }
+        if(seats >= FreeSeats) FreeSeats -= seats;
     }
 
     void freeSeats(int seats) {  // this is for freeing seats when a order is finished (pass the order seats)
-        Capacity += BusySeats - seats;
+        FreeSeats += seats;
     }
 
     
-    
+    void print() const {
+        cout << id << ", ";
+    }
 
-   
+    friend ostream& operator<<(ostream& out, const Table* o) {
+        if (!o) { out << "[null table]"; return out; }
+        o->print();
+        return out;
+    }
 
-    
 };
+
+
+static int TableCount = 0;

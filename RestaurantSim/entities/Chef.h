@@ -58,9 +58,7 @@ public:
     }
 
     void print() const {
-        cout << "[Chef #" << id << " | " << type
-            << " | speed=" << speed
-            << " | " << (isBusy ? "BUSY" : "FREE") << "]";
+        cout << id << ", ";
     }
 
     friend ostream& operator<<(ostream& out, const Chef* c) {

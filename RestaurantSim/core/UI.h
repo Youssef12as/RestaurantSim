@@ -30,14 +30,10 @@ public:
 	void PrintStartSilent() const;
 	void PrintEndSilent() const;
 
-	void PrintCurrentState(
-		int timestep,
-		LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<OVGPriorityItem>& pOVG,
-		LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN,
-		CookingOrders& cookingOrds, LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, LinkedQueue<Order*>& rOVG,
-		LinkedQueue<Order*>& rOVN, derivedQueue& rOVC, priQueue<ScooterPriorityItem>& availScooters,
-		LinkedQueue<Scooter*>& maintScooters, LinkedQueue<Scooter*>& backScooters,
-		Fit_Tables& availTables, priQueue<InServicePriorityItem>& inService,
-		LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
+	void PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
+		LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
+		LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, LinkedQueue<Order*>& rOVG, LinkedQueue<Order*>& rOVN, derivedQueue& rOVC,
+		priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, LinkedQueue<Scooter*>& backScooters
+		, Fit_Tables& availTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
 };
 

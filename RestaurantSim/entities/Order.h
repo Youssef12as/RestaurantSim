@@ -128,16 +128,7 @@ public:
     bool isVIP()      const { return type == "OVC"; }
 
     void print() const {
-        cout << "[Order #" << id << " | " << type
-            << " | TQ=" << TQ << " | size=" << size
-            << " | price=" << price;
-        if (isDineIn())
-            cout << " | seats=" << seats
-            << " | dur=" << duration
-            << " | share=" << (canShare ? "Y" : "N");
-        if (isDelivery())
-            cout << " | dist=" << distance;
-        cout << "]";
+        cout << id << ", ";
     }
 
     friend ostream& operator<<(ostream& out, const Order* o) {

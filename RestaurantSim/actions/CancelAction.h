@@ -47,4 +47,8 @@ public:
 	}
 
 
+	void print() const override{
+		cout << "(X, " << Tcancel << ", " << ID << "), ";
+	}
+
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "priNode.h"
+#include <iostream>
+using namespace std;
 
 
 //This class impelements the priority queue as a sorted list (Linked List)
@@ -64,12 +66,10 @@ public:
         return head == nullptr;
     }
 
-    void print() const {
+    virtual void print() const {
         priNode<T>* ptr = head;
-        cout << endl;
         while (ptr) {
-            int PRI;
-            cout << "Item: " << ptr->getItem(PRI) << " Priority: " << PRI << endl;
+            cout << ptr->getItem();
             ptr = ptr->getNext();
         }
     }
