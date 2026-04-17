@@ -47,4 +47,12 @@ public:
         return found;
     }
 
+    void print() const override {
+        priNode<Order*>* ptr = head;
+        while (ptr) {
+            cout << "[" << ptr->getItem() << ", " << ptr->getItem()->getAssignedChef() << "], ";
+            ptr = ptr->getNext();
+        }
+    }
+
 };

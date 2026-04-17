@@ -9,6 +9,7 @@ using namespace std;
 template <typename T>
 class priQueue
 {
+protected:
     priNode<T>* head;
     static int count;
 public:
@@ -69,7 +70,7 @@ public:
     virtual void print() const {
         priNode<T>* ptr = head;
         while (ptr) {
-            cout << ptr->getItem();
+            cout << ptr->getItem() << ", ";
             ptr = ptr->getNext();
         }
     }

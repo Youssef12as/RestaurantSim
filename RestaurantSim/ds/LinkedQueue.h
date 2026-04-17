@@ -222,14 +222,14 @@ void LinkedQueue<T>::print() const
 	if (std::is_same<T, Action*>::value) {
 		int printed = 0;
 		while (NodePtr && printed < 10) {
-			cout << NodePtr->getItem();
+			cout << NodePtr->getItem() << ", ";
 			NodePtr = NodePtr->getNext();
 			++printed;
 		}
 	}
 	else {
 		while (NodePtr) {
-			cout << NodePtr->getItem();
+			cout << NodePtr->getItem() << ", ";
 			NodePtr = NodePtr->getNext();
 		}
 	}

@@ -68,11 +68,8 @@ public:
 		if (top == -1) return;
 		for (int counter = top; count >= 0; counter--)
 		{
-			cout << "Item: " << items[top] << endl;
+			cout << items[top] << ", ";
 		}
-
-		
-
 	}
 
 }; // end ArrayStack

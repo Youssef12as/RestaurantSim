@@ -37,4 +37,12 @@ public:
         }
         return bestTable;
     }
+
+    void print() const override {
+        priNode<Table*>* ptr = head;
+        while (ptr) {
+            cout << "[" << ptr->getItem() << ", " << ptr->getItem()->getCapacity() << ptr->getItem()->GetFreeSeats() <<"], ";
+            ptr = ptr->getNext();
+        }
+    }
 };

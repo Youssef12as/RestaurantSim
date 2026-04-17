@@ -74,7 +74,7 @@ public:
 	}
 
 	void print() const override {
-		cout << "[" << TYP << ", " << TQ << ", " << ID << "], ";
+		cout << "[" << TYP << ", " << TQ << ", " << ID << "]";
 	}
 	
 };

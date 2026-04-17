@@ -37,7 +37,7 @@ public:
 
     
     void print() const {
-        cout << id << ", ";
+        cout << id;
     }
 
     friend ostream& operator<<(ostream& out, const Table* o) {
