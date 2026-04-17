@@ -53,10 +53,11 @@ public:
 		string mainType = TYP.substr(0, 2);
 		Order* newOrder;
 		// first create the new order
-		if (mainType == "OV") {
+		if (mainType == "OV") { 
 			newOrder = new DeliveryOrder(ID, TYP, TQ, SIZE, Price, Distance);
 		}
 		else if (mainType == "OD") {
+
 			newOrder = new DineInOrder(ID, TYP, TQ, SIZE, Price, Seats, Duration, CanShare);
 		}
 		else {
