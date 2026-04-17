@@ -54,13 +54,13 @@ public:
 		Order* newOrder;
 		// first create the new order
 		if (mainType == "OV") {
-			newOrder = new Order(ID, TYP, TQ, SIZE, Price, Distance);
+			newOrder = new DeliveryOrder(ID, TYP, TQ, SIZE, Price, Distance);
 		}
 		else if (mainType == "OD") {
-			newOrder = new Order(ID, TYP, TQ, SIZE, Price, Seats, Duration, CanShare);
+			newOrder = new DineInOrder(ID, TYP, TQ, SIZE, Price, Seats, Duration, CanShare);
 		}
 		else {
-			newOrder = new Order(ID, TYP, TQ, SIZE, Price);
+			newOrder = new TakeawayOrder(ID, TYP, TQ, SIZE, Price);
 		}
 
 		//then add it to the appropiate list in the retaurant

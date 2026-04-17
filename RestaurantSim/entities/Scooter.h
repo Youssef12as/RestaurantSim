@@ -28,6 +28,8 @@ public:
 
     int GetDistance() const { return Distance_Cut; }
 
+    int getID() const { return id; }
+
     void incDist(int distance) {
         Distance_Cut += distance;
     }

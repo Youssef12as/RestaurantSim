@@ -98,7 +98,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << availTables.GetCount() << " tables: "; availTables.print(); cout << "\n";   //done
 
     cout << "—-------------   In-Service orders [order ID, scooter/Table ID]  --—---------------------\n";
-    cout << inService.GetCount() << " Orders: "; inService.print(); cout << "\n";   // still not done
+    cout << inService.GetCount() << " Orders: "; inService.printInservice(); cout << "\n";   // done this has a specific print function in the priqueue class
 
     cout << "—-------------   In-maintainance scooters IDs   ---------------------- \n";
     cout << maintScooters.GetCount() << " scooters: "; maintScooters.print(); cout << "\n"; //done

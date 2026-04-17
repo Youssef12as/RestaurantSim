@@ -27,6 +27,8 @@ public:
 
     int GetFreeSeats() const { return FreeSeats; }
 
+    int GetId() const { return id; }
+
     bool setBusySeats(int seats) {
         if (seats <= FreeSeats && seats > 0) {
             FreeSeats -= seats;

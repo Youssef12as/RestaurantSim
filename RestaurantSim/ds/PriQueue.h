@@ -1,6 +1,9 @@
 #pragma once
 #include "priNode.h"
 #include <iostream>
+#include "../entities/Order.h"
+#include "../entities/Table.h"
+#include "../entities/Scooter.h"
 using namespace std;
 
 
@@ -71,6 +74,23 @@ public:
         priNode<T>* ptr = head;
         while (ptr) {
             cout << ptr->getItem() << ", ";
+            ptr = ptr->getNext();
+        }
+    }
+
+    void printInservice() const {
+        priNode<T>* ptr = head;
+        while (ptr) {
+            cout << "[" << ptr->getItem() << ", ";
+            DineInOrder* dineIn = dynamic_cast<DineInOrder*>(ptr->getItem());
+            if (dineIn != nullptr) {
+                cout << "T" << dineIn->getAssignedTable()->GetId();
+            }
+            DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(ptr->getItem());
+            if (deliv != nullptr) {
+                cout << "S" << deliv->getAssignedScooter()->getID();
+            }
+            cout << "]";
             ptr = ptr->getNext();
         }
     }
