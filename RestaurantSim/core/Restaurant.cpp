@@ -38,7 +38,7 @@ void Restaurant::randomSimulate()
         {
         case 0: // Dine-In Grilled
         {
-            int seats = rand() % 5;
+            int seats = rand() % 5 +1;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -49,7 +49,7 @@ void Restaurant::randomSimulate()
 
         case 1: // Dine-In Normal
         {
-            int seats = rand() % 5;
+            int seats = rand() % 5 + 1;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -101,6 +101,8 @@ void Restaurant::randomSimulate()
     }
     //------------------end of generation--------------------
 
+
+
     //-------------- add chefs, scooters and tables
     for (size_t i = 0; i < 25; i++)
     {
@@ -137,27 +139,27 @@ void Restaurant::randomSimulate()
 
     pUI->WaitForNextStep();
     //-------------------------while there are processing orders------------
-    while (finishedOrders.GetCount() + cancelledOrders.GetCount() != 500)
+    while (finishedOrders.GetCount() + cancelledOrders.GetCount() < 500)
     {
         //----------- 3.1 --------------
         for (size_t i = 0; i < 30;i++ )
         {
-            if (pendODG.isEmpty() && pendODN.isEmpty() && pendOT.isEmpty()
+            if (pendODG.isEmpty() && pendODN.isEmpty() && pendOT.isEmpty()          // checks the lists
                 && pendOVC.isEmpty() && pendOVG.isEmpty() && pendOVN.isEmpty()) {
                 break;
             }
             int category = rand() % 6;
             // 0: ODG, 1: ODN, 2: OT, 3: OVC, 4: OVG, 5: OVN
-            if (availCN.GetCount() == 0 && availCS.GetCount() == 0) break;
+            if (availCN.GetCount() == 0 && availCS.GetCount() == 0) break;     // check if there are chefs available
             switch (category)
             {
                 case 0: // Dine-In Grilled
                 {
                     Order* o = nullptr;
-                    if (pendODG.peek(o))
+                    if (pendODG.peek(o))        //check the list
                     {
-                        if (assignToChef(o)) {
-                            pendODG.dequeue(o);
+                        if (assignToChef(o)) {      // if the order is assigned to a chef the order will automatically moved to cooking
+                            pendODG.dequeue(o);        // dequeue that order
                         }
                     }
                     break;
@@ -235,18 +237,18 @@ void Restaurant::randomSimulate()
         for (size_t i = 0; i < 15; i++)
         {
             double r = dist(gen);   //this gives random number from 0 to 1 with equal propapilities
-            if (r <= 0.75) {
+            if (r <= 0.75) {        //with propability of 75%
 
-                if (cooking.isEmpty()) {
+                if (cooking.isEmpty()) {    // check the cooking list
                     break;
                 }
                 int pri;
                 Order* od = nullptr;
                 if (cooking.dequeue(od, pri)) {
-                    DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(od);
+                    DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(od);    //check the type of the order by dynamic cast
                     if (deliv != nullptr) {
-                        freeOrderChef(od);
-                        readyOV.enqueue(od);
+                        freeOrderChef(od);      //free the order chef
+                        readyOV.enqueue(od);    //move the order to its ready queue
                         continue;
                     }
                     DineInOrder* dinein = dynamic_cast<DineInOrder*>(od);
@@ -270,19 +272,19 @@ void Restaurant::randomSimulate()
         //--------------- 3.3 --------------
         for (size_t i = 0; i < 10;i++ )
         {
-            if (readyOD.isEmpty() && readyOT.isEmpty() && readyOV.isEmpty()) {
+            if (readyOD.isEmpty() && readyOT.isEmpty() && readyOV.isEmpty()) {  //check the ready lists
                 break;
             }
-            int ready = rand() % 3;
+            int ready = rand() % 3; // randomly choose a list
             Order* od = nullptr;
             switch (ready)
             {
             case 0:
             {
-                if (readyOD.peek(od))
+                if (readyOD.peek(od))   //check the list
                 {
-                    if (assignToTable(od)) {
-                        readyOD.dequeue(od);
+                    if (assignToTable(od)) {    //if the order is assigned to table, it will move to service list
+                        readyOD.dequeue(od);    //dequeue it from the ready list
                     }
                 }
                 break;
@@ -308,7 +310,7 @@ void Restaurant::randomSimulate()
         }
         //-------------------- 3.4 ----------------------
         int randomId = rand() % 500 + 1;
-        cancelOrderFromPending(randomId);
+        cancelOrderFromPending(randomId);   
         //-------------------- 3.5 ----------------------
         randomId = rand() % 500 + 1;
         cancelOrderFromCooking(randomId);
@@ -319,16 +321,16 @@ void Restaurant::randomSimulate()
 
         //---------------- 3.7 -----------------------
         double r2 = dist(gen);
-        if (r2 <= 0.25) {
+        if (r2 <= 0.25) {   //with probapility of 25 
             Order* servedorder = nullptr;
             int pri;
-            if (inServOrders.dequeue(servedorder, pri)) {
-                finishedOrders.push(servedorder);
-                DineInOrder* dinein = dynamic_cast<DineInOrder*>(servedorder);
+            if (inServOrders.dequeue(servedorder, pri)) {   //check the inservice list
+                finishedOrders.push(servedorder);   //push the order to the finished list
+                DineInOrder* dinein = dynamic_cast<DineInOrder*>(servedorder);  //if t is a dinein free its table
                 if (dinein != nullptr) {
                     freeOrderTable(dinein);
                 }
-                else {
+                else {      //if not then it is delivery free its scooter
                     DeliveryOrder* deliv = (DeliveryOrder*)servedorder;
                     freeOrderScooter(deliv);
                 }
@@ -338,12 +340,12 @@ void Restaurant::randomSimulate()
 
         //---------------- 3.8 -------------------
         double r3 = dist(gen);
-        if (r3 <= 0.50) {
+        if (r3 <= 0.50) {       //with probability of 50
             Scooter* backscooter = nullptr;
             int pri;
-            if (backScooters.dequeue(backscooter, pri)) {
-                int distination = rand() % 2;
-                switch (distination) {
+            if (backScooters.dequeue(backscooter, pri)) {   //check the back scooters
+                int distination = rand() % 2;   //random 0 or 1
+                switch (distination) {      //move it to , maintenence or free scooters
                 case 0: {
                     maintScooters.enqueue(backscooter);
                     break;
@@ -358,23 +360,28 @@ void Restaurant::randomSimulate()
 
         //---------------- 3.9 -------------------
         double r4 = dist(gen);
-        if (r4 <= 0.50) {
+        if (r4 <= 0.50) {       //with probability of 50
             Scooter* backscooter = nullptr;
             int pri;
-            if (maintScooters.dequeue(backscooter)) {
-                freeScooters.enqueue(backscooter, -backscooter->GetDistance());
+            if (maintScooters.dequeue(backscooter)) {   //check the maintenence
+                freeScooters.enqueue(backscooter, -backscooter->GetDistance());     //move it to the free scooters
             }
         }
         
 
         //---------------- 3.10 -------------------
-        pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
+        pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,   //print the current step stats
             availCS, availCN, cooking, readyOD, readyOT, readyOV,
             freeScooters, maintScooters, backScooters, freeTables, busySharable, inServOrders, cancelledOrders, finishedOrders);
         currentTime++;
         pUI->WaitForNextStep();
     }
 }
+
+//----------------------------------------------------------------------------------//
+//------------------------- Main functions -----------------------------------------//
+//----------------------------------------------------------------------------------//
+
 
 bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 {
@@ -432,7 +439,7 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             deliv->setAssignedChef(tempChef);
         }
-        if (assigned) cooking.enqueue(od, -ceil(od->getAssignedChef()->getSpeed()));
+        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
         return assigned;
     }
 
@@ -448,7 +455,7 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         }
         take->setAssignedChef(tempChef);
 
-        if (assigned) cooking.enqueue(od, -ceil(od->getAssignedChef()->getSpeed()));
+        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
         return assigned;
     }
 
