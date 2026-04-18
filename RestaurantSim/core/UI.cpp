@@ -4,15 +4,16 @@ UI::UI() {}
 UI::~UI() {}
 ProgramMode UI::ReadMode()
 {
-    int mode;
+    int choice;
     cout << "Select Program Mode:\n";
     cout << "1. Interactive Mode\n";
     cout << "2. Silent Mode\n";
     cout << "Enter choice: ";
-    cin >> mode;
+    cin >> choice;
 
-    if (mode == 2) return ProgramMode::Silent;
-    return ProgramMode::Interactive;
+    if (choice == 2) mode= ProgramMode::Silent;
+    else mode= ProgramMode::Interactive;
+    return mode;
 }
 
 ProgramMode UI::GetMode() const
@@ -68,7 +69,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << "===============   Actions List   ================ \n";
     cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
-    cout << "—-------------     Pending Orders IDs ---------------------- \n";
+    cout << "--------------     Pending Orders IDs ---------------------- \n";
     cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done
     cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n\n";   //done
     cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n\n";    //done
@@ -76,36 +77,36 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << pOVC.GetCount() << " OVC: "; pOVC.print(); cout << "\n\n";    //done
     cout << pOVG.GetCount() << " OVG: "; pOVG.print(); cout << "\n\n";    //done
 
-    cout << "—-------------   Available chefs IDs —---------------------- \n";
+    cout << "--------------   Available chefs IDs ----------------------- \n";
     cout << freeCS.GetCount() << " CS: "; freeCS.print(); cout << "\n\n"; //done
     cout << freeCN.GetCount() << " CN: "; freeCN.print(); cout << "\n\n"; //done
 
-    cout << "—-------------     Cooking orders [Orders ID, chef ID] —--------------------- \n";
+    cout << "--------------     Cooking orders [Orders ID, chef ID] ---------------------- \n";
     cout << cookingOrds.GetCount() << " cooking orders: "; cookingOrds.print(); cout << "\n";   //done
 
-    cout << "—-------------     Ready Orders IDs —--------------------- \n";
+    cout << "--------------     Ready Orders IDs ---------------------- \n";
     cout << rOD.GetCount() << " OD: ";  rOD.print();  cout << "\n\n";     //done
     cout << rOT.GetCount() << " OT: ";  rOT.print();  cout << "\n\n";     //done
-    cout << rOV.GetCount() << " OVG: "; rOV.print(); cout << "\n\n";    //done
+    cout << rOV.GetCount() << " OV: "; rOV.print(); cout << "\n\n";    //done
            
-    cout << "—-------------   Available scooters IDs —---------------------- \n";
+    cout << "--------------   Available scooters IDs ----------------------- \n";
     cout << availScooters.GetCount() << " Scooters: "; availScooters.print(); cout << "\n\n";     //done
 
-    cout << "—-------------   Available tables [ID, capacity, free seats] —---------------------- \n";
+    cout << "--------------   Available tables [ID, capacity, free seats] ----------------------- \n";
     cout << availTables.GetCount() << " tables: "; availTables.print(); cout << "\n\n";   //done
 
-    cout << "—-------------   In-Service orders [order ID, scooter/Table ID]  --—---------------------\n";
+    cout << "--------------   In-Service orders [order ID, scooter/Table ID]  ------------------------\n";
     cout << inService.GetCount() << " Orders: "; inService.printInservice(); cout << "\n\n";   // done this has a specific print function in the priqueue class
 
-    cout << "—-------------   In-maintainance scooters IDs   ---------------------- \n";
+    cout << "--------------   In-maintainance scooters IDs   ---------------------- \n";
     cout << maintScooters.GetCount() << " scooters: "; maintScooters.print(); cout << "\n\n"; //done
 
-    cout << "—-------------    Scooters Back to Restaurant  IDs   ---------------------- \n";
+    cout << "--------------    Scooters Back to Restaurant  IDs   ---------------------- \n";
     cout << backScooters.GetCount() << " scooters: "; backScooters.print(); cout << "\n\n";   //done
 
-    cout << "—-------------   Cancelled Orders IDs   ---------------------- \n";
+    cout << "--------------   Cancelled Orders IDs   ---------------------- \n";
     cout << canceled.GetCount() << " cancelled: "; canceled.print(); cout << "\n\n";  //done
 
-    cout << "—-------------   Finished orders IDs---------------------------- \n";
+    cout << "--------------   Finished orders IDs---------------------------- \n";
     cout << finished.GetCount() << " Orders: "; finished.print(); cout << "\n\n";     //done
 }

@@ -69,7 +69,7 @@ public:
 		if (isEmpty()) return;
 		for (int counter = top; counter >= 0; counter--)
 		{
-			cout << items[top] << ", ";
+			cout << items[counter] << ", ";
 		}
 	}
 

@@ -153,61 +153,79 @@ void Restaurant::randomSimulate()
             {
                 case 0: // Dine-In Grilled
                 {
-                    Order* o;
-                    if (pendODG.dequeue(o)) {
-                        assignToChef(o);
-                        i++;
+                    Order* o = nullptr;
+                    if (pendODG.peek(o))
+                    {
+                        if (assignToChef(o)) {
+                            pendODG.dequeue(o);
+                            i++;
+                        }
                     }
                     break;
                 }
 
                 case 1: // Dine-In Normal
                 {
-                    Order* o;
-                    if (pendODN.dequeue(o)) {
-                        assignToChef(o);
-                        i++;
+                    Order* o= nullptr;
+                    if (pendODN.peek(o))
+                    {
+                        if (assignToChef(o)) {
+                            pendODN.dequeue(o);
+                            i++;
+                        }
                     }
                     break;
                 }
 
                 case 2: // Takeaway
                 {
-                    Order* o;
-                    if (pendOT.dequeue(o)) {
-                        assignToChef(o);
-                        i++;
+                    Order* o = nullptr;
+                    if (pendOT.peek(o))
+                    {
+                        if (assignToChef(o)) {
+                            pendOT.dequeue(o);
+                            i++;
+                        }
                     }
                     break;
                 }
 
                 case 3: // cold delivery order 
                 {
-                    Order* o;
-                    if (pendOVC.dequeue(o)) {
-                        assignToChef(o);
-                        i++;
+                    Order* o = nullptr;
+                    if (pendOVC.peek(o))
+                    {
+                        if (assignToChef(o)) {
+                            pendOVC.dequeue(o);
+                            i++;
+                        }
                     }
                     break;
                 }
 
                 case 4: // grilled delivery order
                 {
-                    Order* o;
+                    Order* o = nullptr;
                     int pri;
-                    if (pendOVG.dequeue(o,pri)) {
-                        assignToChef(o);
-                        i++;
+                    if (pendOVG.peek(o,pri))
+                    {
+                        if (assignToChef(o)) {
+                            pendOVG.dequeue(o, pri);
+                            i++;
+                        }
                     }
                     break;
                 }
 
                 case 5: // Normal Delivery
                 {
-                    Order* o;
-                    if (pendOVN.dequeue(o)) {
-                        assignToChef(o);
-                        i++;
+                    Order* o = nullptr;
+                    if (pendOVN.peek(o))
+                    {
+                        if (assignToChef(o)) {
+                            pendOVN.dequeue(o);
+                            i++;
+                        }
                     }
                     break;
                 }
@@ -262,14 +280,17 @@ void Restaurant::randomSimulate()
                 break;
             }
             int ready = rand() % 3;
-            Order* od;
+            Order* od = nullptr;
             switch (ready)
             {
             case 0:
             {
-                if (readyOD.dequeue(od)) {
-                    assignToTable(od);
-                    i++;
+                if (readyOD.peek(od))
+                {
+                    if (assignToTable(od)) {
+                        readyOD.dequeue(od);
+                        i++;
+                    }
                 }
                 break;
             }
@@ -283,9 +304,12 @@ void Restaurant::randomSimulate()
             }
             case 2:
             {
-                if (readyOV.dequeue(od)) {
-                    assignToScooter(od);
-                    i++;
+                if (readyOV.peek(od))
+                {
+                    if (assignToScooter(od)) {
+                        readyOV.dequeue(od);
+                        i++;
+                    }
                 }
                 break;
             }
