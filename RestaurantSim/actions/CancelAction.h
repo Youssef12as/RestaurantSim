@@ -47,4 +47,8 @@ public:
 	}
 
 
+	void print(ostream& out) const override{
+		out << "(X, " << Tcancel << ", " << ID << ")";
+	}
+
 };

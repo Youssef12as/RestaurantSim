@@ -27,6 +27,13 @@ public:
 		PRI = pri;
 		return item;
 	}
+	/// <summary>
+	/// Added a getitem function without a parameter
+	/// </summary>
+	/// <returns></returns>
+	T getItem() const {
+		return item;
+	}
 
 	priNode<T>* getNext() const
 	{

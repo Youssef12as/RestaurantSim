@@ -1,5 +1,10 @@
 #pragma once
 #include "priNode.h"
+#include <iostream>
+#include "../entities/Order.h"
+#include "../entities/Table.h"
+#include "../entities/Scooter.h"
+using namespace std;
 
 
 //This class impelements the priority queue as a sorted list (Linked List)
@@ -7,10 +12,11 @@
 template <typename T>
 class priQueue
 {
+protected:
     priNode<T>* head;
-    static int count;
+    int count;
 public:
-    priQueue() : head(nullptr) {}
+    priQueue() : head(nullptr) { count = 0; }
 
     ~priQueue() {
         T tmp;
@@ -18,7 +24,7 @@ public:
         while (dequeue(tmp, p));
     }
 
-    //insert the new node in its correct position according to its priority
+    //insert the new node in its correct position according to its priority (higher priority first)
     void enqueue(const T& data, int priority) {
         priNode<T>* newNode = new priNode<T>(data, priority);
 
@@ -64,16 +70,33 @@ public:
         return head == nullptr;
     }
 
-    void print() const {
+    virtual void print() const {
         priNode<T>* ptr = head;
-        cout << endl;
         while (ptr) {
-            int PRI;
-            cout << "Item: " << ptr->getItem(PRI) << " Priority: " << PRI << endl;
+            cout << ptr->getItem() << ", ";
             ptr = ptr->getNext();
         }
     }
+
+    void printInservice() const {
+        priNode<T>* ptr = head;
+        while (ptr) {
+            cout << "[" << ptr->getItem() << ", ";
+            DineInOrder* dineIn = dynamic_cast<DineInOrder*>(ptr->getItem());
+            if (dineIn != nullptr) {
+                cout << "T" << dineIn->getAssignedTable()->GetId();
+            }
+            DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(ptr->getItem());
+            if (deliv != nullptr) {
+                cout << "S" << deliv->getAssignedScooter()->getID();
+            }
+            cout << "]";
+            ptr = ptr->getNext();
+        }
+    }
+
+    int GetCount() const {
+        return count;
+    }
 };
 
-template <typename T>
-int priQueue<T>::count = 0;

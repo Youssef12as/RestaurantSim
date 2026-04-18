@@ -43,7 +43,9 @@ Single Node Case:
 
 #include "Node.h"
 #include "QueueADT.h"
-#include <vector>
+#include "../actions/Action.h"
+#include <type_traits>
+#include <iostream>
 using namespace std;
 
 
@@ -54,7 +56,7 @@ private:
 
 	Node<T>* backPtr;
 	Node<T>* frontPtr;
-	static int count;
+	int count;
 public:
 	LinkedQueue();
 	bool isEmpty() const;
@@ -62,7 +64,7 @@ public:
 	bool dequeue(T& frntEntry);
 	bool peek(T& frntEntry)  const;
 	int GetCount() const;
-	void print() const;
+	virtual void print() const;
 	~LinkedQueue();
 
 	//copy constructor
@@ -81,6 +83,7 @@ LinkedQueue<T>::LinkedQueue()
 {
 	backPtr = nullptr;
 	frontPtr = nullptr;
+	count = 0;
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +113,7 @@ Output: True if the operation is successful; otherwise false.
 template <typename T>
 bool LinkedQueue<T>::enqueue(const T& newEntry)
 {
-	Node<T>* newNodePtr = new Node<T>(newEntry);
+	Node<T>* newNodePtr = new Node<T>(newEntry); //shalow copy for the pointer of the order (perfect)
 	// Insert the new node
 	if (isEmpty())	//special case if this is the first node to insert
 		frontPtr = newNodePtr; // The queue is empty
@@ -208,26 +211,30 @@ LinkedQueue<T>::LinkedQueue(const LinkedQueue<T>& LQ)
 		enqueue(NodePtr->getItem());	//get data of each node and enqueue it in this queue 
 		NodePtr = NodePtr->getNext();
 	}
+	count = LQ.count;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
 Function: print
 */
-
 template <typename T>
 void LinkedQueue<T>::print() const
 {
 	Node<T>* NodePtr = frontPtr;
-	cout << endl;
-	while (NodePtr) {
-		cout << "Item: " << NodePtr->getItem() << endl;
-		NodePtr = NodePtr->getNext();
+	if (std::is_same<T, Action*>::value) {
+		int printed = 0;
+		while (NodePtr && printed < 10) {
+			cout << NodePtr->getItem() << ", ";
+			NodePtr = NodePtr->getNext();
+			++printed;
+		}
 	}
-	
+	else {
+		while (NodePtr) {
+			cout << NodePtr->getItem() << ", ";
+			NodePtr = NodePtr->getNext();
+		}
+	}
 }
-
-
-template <typename T>
-int LinkedQueue<T>::count = 0;
 
 #endif

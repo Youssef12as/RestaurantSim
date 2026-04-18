@@ -130,26 +130,29 @@
     <ClInclude Include="actions\Action.h" />
     <ClInclude Include="actions\CancelAction.h" />
     <ClInclude Include="actions\RequestAction.h" />
-    <ClInclude Include="CookingOrders.h" />
     <ClInclude Include="core\Restaurant.h" />
+    <ClInclude Include="core\UI.h" />
     <ClInclude Include="DEFS.h" />
+    <ClInclude Include="Derived DS\CookingOrders.h" />
+    <ClInclude Include="Derived DS\derivedQueue.h" />
+    <ClInclude Include="Derived DS\Fit_Table.h" />
     <ClInclude Include="ds\ArrayStack.h" />
     <ClInclude Include="ds\LinkedQueue.h" />
     <ClInclude Include="ds\Node.h" />
     <ClInclude Include="ds\PriNode.h" />
     <ClInclude Include="ds\PriQueue.h" />
     <ClInclude Include="ds\QueueADT.h" />
+    <ClInclude Include="ds\StackADT.h" />
     <ClInclude Include="entities\Chef.h" />
     <ClInclude Include="entities\Order.h" />
-    <ClInclude Include="derivedQueue.h" />
-    <ClInclude Include="Fit_Table.h" />
+    <ClInclude Include="entities\Scooter.h" />
+    <ClInclude Include="entities\Table.h" />
     <ClInclude Include="PriorityParameters.h" />
-    <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp" />
+    <ClCompile Include="core\UI.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
