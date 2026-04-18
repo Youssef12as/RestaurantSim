@@ -62,7 +62,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
     LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV,
     priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
-    , Fit_Tables& availTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
+    , Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
     cout << "\nCurrent Timestep: " << timestep << "\n";
 
@@ -94,6 +94,9 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
 
     cout << "--------------   Available tables [ID, capacity, free seats] ----------------------- \n";
     cout << availTables.GetCount() << " tables: "; availTables.print(); cout << "\n\n";   //done
+
+    cout << "--------------   Available shared tables [ID, capacity, free seats] ----------------------- \n";
+    cout << sharedTables.GetCount() << " tables: "; sharedTables.print(); cout << "\n\n";   //done
 
     cout << "--------------   In-Service orders [order ID, scooter/Table ID]  ------------------------\n";
     cout << inService.GetCount() << " Orders: "; inService.printInservice(); cout << "\n\n";   // done this has a specific print function in the priqueue class

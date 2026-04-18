@@ -30,6 +30,6 @@ public:
 		LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
 		LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV,
 		priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
-		, Fit_Tables& availTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
+		, Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
 };
 

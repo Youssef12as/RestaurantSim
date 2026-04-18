@@ -38,7 +38,7 @@ void Restaurant::randomSimulate()
         {
         case 0: // Dine-In Grilled
         {
-            int seats = rand() % 6 + 1;
+            int seats = rand() % 5;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -49,7 +49,7 @@ void Restaurant::randomSimulate()
 
         case 1: // Dine-In Normal
         {
-            int seats = rand() % 6 + 1;
+            int seats = rand() % 5;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -125,7 +125,7 @@ void Restaurant::randomSimulate()
         Table* temptable = new Table(7);
         freeTables.enqueue(temptable, -temptable->GetFreeSeats());
     }
-    for (size_t i = 0; i < 8; i++)
+    for (size_t i = 0; i < 10; i++)
     {
         Table* temptable = new Table(4);
         freeTables.enqueue(temptable, -temptable->GetFreeSeats());
@@ -133,14 +133,14 @@ void Restaurant::randomSimulate()
 
     pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
         availCS, availCN, cooking, readyOD, readyOT, readyOV,
-        freeScooters, maintScooters, backScooters, freeTables, inServOrders, cancelledOrders, finishedOrders);
+        freeScooters, maintScooters, backScooters, freeTables, busySharable, inServOrders, cancelledOrders, finishedOrders);
 
     pUI->WaitForNextStep();
     //-------------------------while there are processing orders------------
     while (finishedOrders.GetCount() + cancelledOrders.GetCount() != 500)
     {
         //----------- 3.1 --------------
-        for (size_t i = 0; i < 30; )
+        for (size_t i = 0; i < 30;i++ )
         {
             if (pendODG.isEmpty() && pendODN.isEmpty() && pendOT.isEmpty()
                 && pendOVC.isEmpty() && pendOVG.isEmpty() && pendOVN.isEmpty()) {
@@ -148,7 +148,7 @@ void Restaurant::randomSimulate()
             }
             int category = rand() % 6;
             // 0: ODG, 1: ODN, 2: OT, 3: OVC, 4: OVG, 5: OVN
-
+            if (availCN.GetCount() == 0 && availCS.GetCount() == 0) break;
             switch (category)
             {
                 case 0: // Dine-In Grilled
@@ -158,7 +158,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendODG.dequeue(o);
-                            i++;
                         }
                     }
                     break;
@@ -171,7 +170,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendODN.dequeue(o);
-                            i++;
                         }
                     }
                     break;
@@ -184,7 +182,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOT.dequeue(o);
-                            i++;
                         }
                     }
                     break;
@@ -197,7 +194,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVC.dequeue(o);
-                            i++;
                         }
                     }
                     break;
@@ -211,7 +207,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVG.dequeue(o, pri);
-                            i++;
                         }
                     }
                     break;
@@ -224,7 +219,6 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVN.dequeue(o);
-                            i++;
                         }
                     }
                     break;
@@ -247,18 +241,18 @@ void Restaurant::randomSimulate()
                     break;
                 }
                 int pri;
-                Order* od;
+                Order* od = nullptr;
                 if (cooking.dequeue(od, pri)) {
-                    DineInOrder* dinein = dynamic_cast<DineInOrder*>(od);
-                    if (dinein != nullptr) {
-                        freeOrderChef(od);
-                        readyOD.enqueue(od);
-                        continue;
-                    }
                     DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(od);
                     if (deliv != nullptr) {
                         freeOrderChef(od);
                         readyOV.enqueue(od);
+                        continue;
+                    }
+                    DineInOrder* dinein = dynamic_cast<DineInOrder*>(od);
+                    if (dinein != nullptr) {
+                        freeOrderChef(od);
+                        readyOD.enqueue(od);
                         continue;
                     }
                     TakeawayOrder* take = dynamic_cast<TakeawayOrder*>(od);
@@ -274,7 +268,7 @@ void Restaurant::randomSimulate()
         }
 
         //--------------- 3.3 --------------
-        for (size_t i = 0; i < 10; )
+        for (size_t i = 0; i < 10;i++ )
         {
             if (readyOD.isEmpty() && readyOT.isEmpty() && readyOV.isEmpty()) {
                 break;
@@ -289,7 +283,6 @@ void Restaurant::randomSimulate()
                 {
                     if (assignToTable(od)) {
                         readyOD.dequeue(od);
-                        i++;
                     }
                 }
                 break;
@@ -298,7 +291,6 @@ void Restaurant::randomSimulate()
             {
                 if (readyOT.dequeue(od)) {
                     finishedOrders.push(od);
-                    i++;
                 }
                 break;
             }
@@ -308,7 +300,6 @@ void Restaurant::randomSimulate()
                 {
                     if (assignToScooter(od)) {
                         readyOV.dequeue(od);
-                        i++;
                     }
                 }
                 break;
@@ -379,7 +370,7 @@ void Restaurant::randomSimulate()
         //---------------- 3.10 -------------------
         pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
             availCS, availCN, cooking, readyOD, readyOT, readyOV,
-            freeScooters, maintScooters, backScooters, freeTables, inServOrders, cancelledOrders, finishedOrders);
+            freeScooters, maintScooters, backScooters, freeTables, busySharable, inServOrders, cancelledOrders, finishedOrders);
         currentTime++;
         pUI->WaitForNextStep();
     }
@@ -394,13 +385,17 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         bool assigned = false;
         Chef* tempChef = nullptr;
         if (type == 'G') {          //check the exact type
-            assigned = availCS.dequeue(tempChef);
-            dinein->setAssignedChef(tempChef);
+            if (availCS.GetCount() > 0) {
+                assigned = availCS.dequeue(tempChef);
+                dinein->setAssignedChef(tempChef);
+            }
         }
         else
         {
-            assigned = availCN.dequeue(tempChef);
-            if (!assigned) {
+            if (availCN.GetCount() > 0) {
+                assigned = availCN.dequeue(tempChef);
+            }
+            else if (availCS.GetCount() > 0) {
                 assigned = availCS.dequeue(tempChef);
             }
             dinein->setAssignedChef(tempChef);
@@ -416,19 +411,24 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         Chef* tempChef = nullptr;
         bool assigned = false;
         if (type == 'G') {
-            assigned = availCS.dequeue(tempChef);
-            deliv->setAssignedChef(tempChef);
+            if (availCS.GetCount() > 0) {
+                assigned = availCS.dequeue(tempChef);
+                deliv->setAssignedChef(tempChef);
+            }
         }
         else if(type == 'N')
         {
-            assigned = availCN.dequeue(tempChef);
-            deliv->setAssignedChef(tempChef);
+            if (availCN.GetCount() > 0) {
+                assigned = availCN.dequeue(tempChef);
+                deliv->setAssignedChef(tempChef);
+            }
         }
         else {
-            assigned = availCN.dequeue(tempChef);
-            if (!assigned) {
+            if (availCN.GetCount() > 0) {
+                assigned = availCN.dequeue(tempChef);
+            }
+            else if (availCS.GetCount() > 0) {
                 assigned = availCS.dequeue(tempChef);
-                
             }
             deliv->setAssignedChef(tempChef);
         }
@@ -443,7 +443,9 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         bool assigned = false;
         Chef* tempChef = nullptr;
 
-        assigned = availCN.dequeue(tempChef);
+        if (availCN.GetCount() > 0) {
+            assigned = availCN.dequeue(tempChef);
+        }
         take->setAssignedChef(tempChef);
 
         if (assigned) cooking.enqueue(od, -ceil(od->getAssignedChef()->getSpeed()));
