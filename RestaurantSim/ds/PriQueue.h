@@ -4,6 +4,7 @@
 #include "../entities/Order.h"
 #include "../entities/Table.h"
 #include "../entities/Scooter.h"
+#include <type_traits>
 using namespace std;
 
 
@@ -24,7 +25,7 @@ public:
         while (dequeue(tmp, p));
     }
 
-    //insert the new node in its correct position according to its priority (higher priority first)
+    //insert the new node in its correct position according to its priority
     void enqueue(const T& data, int priority) {
         priNode<T>* newNode = new priNode<T>(data, priority);
 
@@ -79,20 +80,23 @@ public:
     }
 
     void printInservice() const {
-        priNode<T>* ptr = head;
-        while (ptr) {
-            cout << "[" << ptr->getItem() << ", ";
-            DineInOrder* dineIn = dynamic_cast<DineInOrder*>(ptr->getItem());
-            if (dineIn != nullptr) {
-                cout << "T" << dineIn->getAssignedTable()->GetId();
+        if (std::is_same<T, Order*>::value) {
+            priNode<T>* ptr = head;
+            while (ptr) {
+                cout << "[" << ptr->getItem() << ", ";
+                DineInOrder* dineIn = dynamic_cast<DineInOrder*>(ptr->getItem());
+                if (dineIn != nullptr) {
+                    cout << "T" << dineIn->getAssignedTable()->GetId();
+                }
+                DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(ptr->getItem());
+                if (deliv != nullptr) {
+                    cout << "S" << deliv->getAssignedScooter()->getID();
+                }
+                cout << "]";
+                ptr = ptr->getNext();
             }
-            DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(ptr->getItem());
-            if (deliv != nullptr) {
-                cout << "S" << deliv->getAssignedScooter()->getID();
-            }
-            cout << "]";
-            ptr = ptr->getNext();
         }
+        else return;
     }
 
     int GetCount() const {

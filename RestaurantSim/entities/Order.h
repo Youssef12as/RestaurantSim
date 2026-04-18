@@ -25,7 +25,7 @@ public:
         TA(-1), TR(-1), TS(-1), TF(-1), assignedChef(nullptr) {
     }
 
-    virtual ~Order() {}
+    virtual ~Order() = default;
 
     int getID() const { return id; }
     string getType() const { return type; }

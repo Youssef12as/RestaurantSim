@@ -49,7 +49,7 @@ void Restaurant::randomSimulate()
 
         case 1: // Dine-In Normal
         {
-            int seats = rand() % 5 + 1;
+            int seats = rand() % 5 +1;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -332,7 +332,7 @@ void Restaurant::randomSimulate()
                 }
                 else {      //if not then it is delivery free its scooter
                     DeliveryOrder* deliv = (DeliveryOrder*)servedorder;
-                    freeOrderScooter(deliv);
+                    freeOrderScooter(deliv);        //return the scooter to back_scooters
                 }
             }
         }

@@ -19,7 +19,6 @@ public:
             Table* currentItem = nullptr;
             int pri = 0;
             dequeue(currentItem, pri);
-
             if (currentItem && currentItem->GetFreeSeats() >= requiredSeats)
             {
                 bestTable = currentItem;
