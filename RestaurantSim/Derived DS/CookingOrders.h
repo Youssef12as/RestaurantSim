@@ -23,10 +23,6 @@ public:
             {
                 cancelledOrder = currentOrder;
                 found = true;
-
-                //Released its Chef
-                Chef* chefPtr = currentOrder->getAssignedChef();
-                if (chefPtr) chefPtr->releaseOrder();
             }
             else
             {

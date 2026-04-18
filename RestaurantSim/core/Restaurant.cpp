@@ -71,7 +71,7 @@ void Restaurant::randomSimulate()
 
             DeliveryOrder* o = new DeliveryOrder(id, "OVC", TQ, size, price, dist);
 
-            float priority = o->getOVGPriority(1.0, 1.0, 1.0);
+            //float priority = o->getOVGPriority(1.0, 1.0, 1.0);// There is no meaning for this since it is queue not priQueue
             pendOVC.enqueue(o);
 
             break;
@@ -151,66 +151,66 @@ void Restaurant::randomSimulate()
 
             switch (category)
             {
-            case 0: // Dine-In Grilled
-            {
-                Order* o;
-                if (pendODG.dequeue(o)) {
-                    assignToChef(o);
-                    i++;
+                case 0: // Dine-In Grilled
+                {
+                    Order* o;
+                    if (pendODG.dequeue(o)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 1: // Dine-In Normal
-            {
-                Order* o;
-                if (pendODN.dequeue(o)) {
-                    assignToChef(o);
-                    i++;
+                case 1: // Dine-In Normal
+                {
+                    Order* o;
+                    if (pendODN.dequeue(o)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 2: // Takeaway
-            {
-                Order* o;
-                if (pendOT.dequeue(o)) {
-                    assignToChef(o);
-                    i++;
+                case 2: // Takeaway
+                {
+                    Order* o;
+                    if (pendOT.dequeue(o)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 3: // cold delivery order 
-            {
-                Order* o;
-                if (pendOVC.dequeue(o)) {
-                    assignToChef(o);
-                    i++;
+                case 3: // cold delivery order 
+                {
+                    Order* o;
+                    if (pendOVC.dequeue(o)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 4: // grilled delivery order
-            {
-                Order* o;
-                int pri;
-                if (pendOVG.dequeue(o,pri)) {
-                    assignToChef(o);
-                    i++;
+                case 4: // grilled delivery order
+                {
+                    Order* o;
+                    int pri;
+                    if (pendOVG.dequeue(o,pri)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case 5: // Normal Delivery
-            {
-                Order* o;
-                if (pendOVN.dequeue(o)) {
-                    assignToChef(o);
-                    i++;
+                case 5: // Normal Delivery
+                {
+                    Order* o;
+                    if (pendOVN.dequeue(o)) {
+                        assignToChef(o);
+                        i++;
+                    }
+                    break;
                 }
-                break;
-            }
             }
 
         }
@@ -292,19 +292,19 @@ void Restaurant::randomSimulate()
             }
         }
         //-------------------- 3.4 ----------------------
-        int randomId = rand() % 600;
+        int randomId = rand() % 500 + 1;
         cancelOrderFromPending(randomId);
         //-------------------- 3.5 ----------------------
-        randomId = rand() % 600;
+        randomId = rand() % 500 + 1;
         cancelOrderFromCooking(randomId);
         //-------------------- 3.6 ----------------------
-        randomId = rand() % 600;
+        randomId = rand() % 500 + 1;
         cancelOrderFromReady(randomId);
 
 
         //---------------- 3.7 -----------------------
         double r2 = dist(gen);
-        if (r2 <= 25) {
+        if (r2 <= 0.25) {
             Order* servedorder = nullptr;
             int pri;
             if (inServOrders.dequeue(servedorder, pri)) {
@@ -323,7 +323,7 @@ void Restaurant::randomSimulate()
 
         //---------------- 3.8 -------------------
         double r3 = dist(gen);
-        if (r3 <= 50) {
+        if (r3 <= 0.50) {
             Scooter* backscooter = nullptr;
             int pri;
             if (backScooters.dequeue(backscooter, pri)) {
@@ -343,7 +343,7 @@ void Restaurant::randomSimulate()
 
         //---------------- 3.9 -------------------
         double r4 = dist(gen);
-        if (r4 <= 50) {
+        if (r4 <= 0.50) {
             Scooter* backscooter = nullptr;
             int pri;
             if (maintScooters.dequeue(backscooter)) {
@@ -359,9 +359,6 @@ void Restaurant::randomSimulate()
         currentTime++;
         pUI->WaitForNextStep();
     }
-
-   
-
 }
 
 bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
@@ -384,7 +381,7 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             dinein->setAssignedChef(tempChef);
         }
-        if(assigned) cooking.enqueue(od, -ceil(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+        if(assigned) cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
         return assigned;
     }
 
@@ -504,6 +501,7 @@ bool Restaurant::freeOrderChef(Order* od)
 {
     if (od->getAssignedChef() != nullptr) {
         Chef* tempchef = od->getAssignedChef();
+        tempchef->releaseOrder();
         if (tempchef->getType() == "CS") {
             availCS.enqueue(tempchef);
         }
