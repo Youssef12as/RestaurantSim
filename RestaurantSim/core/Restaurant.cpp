@@ -140,7 +140,7 @@ void Restaurant::randomSimulate()
     while (finishedOrders.GetCount() + cancelledOrders.GetCount() != 500)
     {
         //----------- 3.1 --------------
-        for (size_t i = 0; i < 30; )
+        for (size_t i = 0; i < 30; i++)
         {
             if (pendODG.isEmpty() && pendODN.isEmpty() && pendOT.isEmpty()
                 && pendOVC.isEmpty() && pendOVG.isEmpty() && pendOVN.isEmpty()) {
@@ -158,7 +158,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendODG.dequeue(o);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -171,7 +171,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendODN.dequeue(o);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -184,7 +184,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOT.dequeue(o);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -197,7 +197,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVC.dequeue(o);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -211,7 +211,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVG.dequeue(o, pri);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -224,7 +224,7 @@ void Restaurant::randomSimulate()
                     {
                         if (assignToChef(o)) {
                             pendOVN.dequeue(o);
-                            i++;
+                            //i++;
                         }
                     }
                     break;
@@ -274,7 +274,7 @@ void Restaurant::randomSimulate()
         }
 
         //--------------- 3.3 --------------
-        for (size_t i = 0; i < 10; )
+        for (size_t i = 0; i < 10; i++)
         {
             if (readyOD.isEmpty() && readyOT.isEmpty() && readyOV.isEmpty()) {
                 break;
@@ -289,7 +289,7 @@ void Restaurant::randomSimulate()
                 {
                     if (assignToTable(od)) {
                         readyOD.dequeue(od);
-                        i++;
+                        //i++;
                     }
                 }
                 break;
@@ -298,7 +298,7 @@ void Restaurant::randomSimulate()
             {
                 if (readyOT.dequeue(od)) {
                     finishedOrders.push(od);
-                    i++;
+                    //i++;
                 }
                 break;
             }
@@ -308,7 +308,7 @@ void Restaurant::randomSimulate()
                 {
                     if (assignToScooter(od)) {
                         readyOV.dequeue(od);
-                        i++;
+                        //i++;
                     }
                 }
                 break;
