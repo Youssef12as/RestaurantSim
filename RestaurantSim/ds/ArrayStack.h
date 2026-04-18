@@ -18,13 +18,14 @@ class ArrayStack : public StackADT<T>
 private:
 	T items[MAX_SIZE];		// Array of stack items
 	int top;				// Index to top of stack
-	static int count;
+	int count;
 
 public:
 
 	ArrayStack()
 	{
 		top = -1;
+		count = 0;
 	}  // end default constructor
 
 	bool isEmpty() const
@@ -65,16 +66,13 @@ public:
 	}
 
 	void print() {
-		if (top == -1) return;
-		for (int counter = top; count >= 0; counter--)
+		if (isEmpty()) return;
+		for (int counter = top; counter >= 0; counter--)
 		{
 			cout << items[top] << ", ";
 		}
 	}
 
 }; // end ArrayStack
-
-template<typename T>
-int ArrayStack<T>::count = 0;
 
 #endif

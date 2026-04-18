@@ -1,4 +1,12 @@
 #pragma once
+#include "../ds/LinkedQueue.h"
+#include "../ds/PriQueue.h"
+#include "../Derived DS/CookingOrders.h"
+#include "../Derived DS/Fit_Table.h"
+#include "../ds/ArrayStack.h"
+#include "../entities/Order.h"
+#include "../Derived DS/derivedQueue.h"
+#include "UI.h"
 
 using namespace std;
 
@@ -9,63 +17,69 @@ class Table;
 class Action;
 class UI;
 
-#include <iostream>
-#include <string>
-#include "../ds/LinkedQueue.h"
-#include "../ds/PriQueue.h"
-#include "../Derived DS/CookingOrders.h"
-#include "../Derived DS/Fit_Table.h"
-#include "../ds/ArrayStack.h"
-
-#include "../entities/Order.h"
-#include "../entities/Chef.h"
-#include "../entities/Scooter.h"
-#include "../entities/Table.h"
-#include "../Derived DS/derivedQueue.h"
-
-
-
-
 class Restaurant {
 private:
+    // --------------------Actions--------------
+    LinkedQueue<Action*> actions;
 
+    // --------------------pending orders--------------
     LinkedQueue<Order*> pendODG;
     LinkedQueue<Order*> pendODN;
     LinkedQueue<Order*> pendOT;
-    derivedQueue pendOVC;
+    derivedQueue        pendOVC;
     priQueue<Order*>    pendOVG;
     LinkedQueue<Order*> pendOVN;
 
+    // --------------------coocking orders--------------
     CookingOrders       cooking;
 
+    // -------------------ready orders----------------
     LinkedQueue<Order*> readyOT;
     LinkedQueue<Order*> readyOD;
-    derivedQueue readyOVC;
-    LinkedQueue<Order*> readyOVG;
-    LinkedQueue<Order*> readyOVN;
-
-
+    derivedQueue        readyOV;
+    
+    // --------------------inservice orders--------------
     priQueue<Order*>    inServOrders;
+
+    // --------------------finished orders--------------
     ArrayStack<Order*>    finishedOrders;
+
+    // --------------------cancelled orders--------------
     LinkedQueue<Order*> cancelledOrders;
 
+    // -------------------- chefs --------------
     LinkedQueue<Chef*>  availCN;
     LinkedQueue<Chef*>  availCS;
 
+    // -------------------- scooters --------------
     priQueue<Scooter*>  freeScooters;
     priQueue<Scooter*>  backScooters;
     LinkedQueue<Scooter*> maintScooters;
 
+    // -------------------- tables  --------------
     Fit_Tables  freeTables;
     Fit_Tables  busySharable;
-  //  priQueue<Table*>  busyNoShare;
+    LinkedQueue<Table*>  busyNoShare;
 
-    int currentTime;
+    int currentTime;        // current time indicator
+
+    UI* pUI;                // pointer for the ui class
 
 public:
     Restaurant();
     ~Restaurant();
+    // most of these functions need to be updated for phase 2
+   void randomSimulate();
+   bool assignToChef(Order* od);    // assign an order to a chef
+   bool assignToTable(Order* od);   // assign an order to a table and put the order in inservice list
+   bool assignToScooter(Order* od); // assign an order to scooter and put the order in inservice list
+   //for cancelling OVCs
+   bool cancelOrderFromPending(int id);  
+   bool cancelOrderFromCooking(int id);
+   bool cancelOrderFromReady(int id);
 
-   void randomSimulate(UI& ui);
+   bool freeOrderChef(Order* od);   // free the chef of an order
+   bool freeOrderTable(DineInOrder* dinorder);     // free a table
+   bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter
 
 };

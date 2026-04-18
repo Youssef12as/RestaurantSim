@@ -9,16 +9,17 @@ private:
     int Main_Dur;
     int Distance_Cut;
 
+    int DeliveredOrders;
     static int ScooterCount;
 
 public:
     Scooter() :
-        Speed(0), Main_Dur(0), Distance_Cut(0) {
+        Speed(0), Main_Dur(0), Distance_Cut(0), DeliveredOrders(0) {
         id = ScooterCount++;
     }
 
     Scooter(int speed, int maind) :
-        Speed(speed), Main_Dur(maind), Distance_Cut(0) {
+        Speed(speed), Main_Dur(maind), Distance_Cut(0), DeliveredOrders(0) {
         id = ScooterCount++;
     }
 
@@ -29,6 +30,18 @@ public:
     int GetDistance() const { return Distance_Cut; }
 
     int getID() const { return id; }
+
+    void incrementDeliOreders() {       // i will increent this to compare it with main_ord in restaurant
+        DeliveredOrders++;      
+    }
+
+    void resetDeliOreders() {          // this is resetted when the scooter back from mentainence
+        DeliveredOrders = 0;
+    }
+
+    int getDeliOrders() const {
+        return DeliveredOrders;
+    }
 
     void incDist(int distance) {
         Distance_Cut += distance;
@@ -46,5 +59,3 @@ public:
    
 
 };
-
-static int ScooterCount = 0;

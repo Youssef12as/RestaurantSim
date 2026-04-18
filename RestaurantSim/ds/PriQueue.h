@@ -14,9 +14,9 @@ class priQueue
 {
 protected:
     priNode<T>* head;
-    static int count;
+    int count;
 public:
-    priQueue() : head(nullptr) {}
+    priQueue() : head(nullptr) { count = 0; }
 
     ~priQueue() {
         T tmp;
@@ -100,5 +100,3 @@ public:
     }
 };
 
-template <typename T>
-int priQueue<T>::count = 0;

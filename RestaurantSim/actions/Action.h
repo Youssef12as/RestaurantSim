@@ -16,11 +16,12 @@ public:
 
 	virtual void Act() = 0; // overwrite for each dervide classs
 
-	virtual void print() const {  // override this for each class
+	virtual void print(ostream& out) const {  // override this for each class
 	}
 
 	friend ostream& operator<<(ostream& out, const Action* act) {	// polymorphism using reference
-		act->print();
+		act->print(out);
+		return out;
 	}
 
 	// more functions will be added if needed

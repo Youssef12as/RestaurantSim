@@ -74,8 +74,8 @@ public:
 		return TQ;
 	}
 
-	void print() const override {
-		cout << "[" << TYP << ", " << TQ << ", " << ID << "]";
+	void print(ostream& out) const override {
+		out << "[" << TYP << ", " << TQ << ", " << ID << "]";
 	}
 	
 };

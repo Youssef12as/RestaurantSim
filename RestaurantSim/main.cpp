@@ -4,15 +4,18 @@
 #include "../RestaurantSim/ds/LinkedQueue.h"
 #include "../RestaurantSim/ds/ArrayStack.h"
 #include "../RestaurantSim/ds/PriQueue.h"
+#include "core/UI.h"
+#include "core/Restaurant.h"
+
+int Chef::ChefCount = 1;
+int Scooter::ScooterCount = 1;
+int Table::TableCount = 1;
 
 int main() {
-	std::cout << "Welcome to the Restaurant Simulation!" << std::endl;
-	// Here you can add code to initialize your restaurant simulation
-	// For example, you could create instances of classes like Restaurant, Customer, Waiter, etc.
-	
-	// Example:
-	// Restaurant myRestaurant;
-	// myRestaurant.open();
+
+	Restaurant myres;
+	myres.randomSimulate();
+
 	
 	return 0;
 }

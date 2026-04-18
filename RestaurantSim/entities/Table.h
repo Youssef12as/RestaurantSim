@@ -53,6 +53,3 @@ public:
     }
 
 };
-
-
-static int TableCount = 0;

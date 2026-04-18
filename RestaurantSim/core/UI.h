@@ -9,10 +9,6 @@
 #include "../PriorityParameters.h"
 using namespace std;
 
-class Action;
-class Order;
-class Chef;
-class Scooter;
 class UI
 {
 	ProgramMode mode;
@@ -32,8 +28,8 @@ public:
 
 	void PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
 		LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
-		LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, LinkedQueue<Order*>& rOVG, LinkedQueue<Order*>& rOVN, derivedQueue& rOVC,
-		priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, LinkedQueue<Scooter*>& backScooters
+		LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV,
+		priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
 		, Fit_Tables& availTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
 };
 

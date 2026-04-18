@@ -9,19 +9,22 @@ private:
     int id;
     string type;
     float speed;
-
     bool isBusy;
     int busyTime;
 
+    static int ChefCount;
+
 public:
     Chef() :
-        id(0), type(""), speed(0),
+        type(""), speed(0),
         isBusy(false), busyTime(0) {
+        id = ChefCount++;
     }
 
-    Chef(int id, string type, float speed) :
-        id(id), type(type), speed(speed),
+    Chef(string type, float speed) :
+        type(type), speed(speed),
         isBusy(false), busyTime(0) {
+        id = ChefCount++;
     }
 
     int getID() const { return id; }
@@ -56,8 +59,8 @@ public:
         cout << id;
     }
 
-    friend ostream& operator<<(ostream& out, const Chef& c) {
-        c.print();
+    friend ostream& operator<<(ostream& out, const Chef* c) {
+        c->print();
         return out;
     }
 };

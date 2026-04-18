@@ -44,7 +44,7 @@ Single Node Case:
 #include "Node.h"
 #include "QueueADT.h"
 #include "../actions/Action.h"
-
+#include <type_traits>
 #include <iostream>
 using namespace std;
 
@@ -56,7 +56,7 @@ private:
 
 	Node<T>* backPtr;
 	Node<T>* frontPtr;
-	static int count;
+	int count;
 public:
 	LinkedQueue();
 	bool isEmpty() const;
@@ -83,6 +83,7 @@ LinkedQueue<T>::LinkedQueue()
 {
 	backPtr = nullptr;
 	frontPtr = nullptr;
+	count = 0;
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -210,6 +211,7 @@ LinkedQueue<T>::LinkedQueue(const LinkedQueue<T>& LQ)
 		enqueue(NodePtr->getItem());	//get data of each node and enqueue it in this queue 
 		NodePtr = NodePtr->getNext();
 	}
+	count = LQ.count;
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -234,9 +236,5 @@ void LinkedQueue<T>::print() const
 		}
 	}
 }
-
-
-template <typename T>
-int LinkedQueue<T>::count = 0;
 
 #endif
