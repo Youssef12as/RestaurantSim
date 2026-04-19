@@ -59,7 +59,7 @@ private:
     // -------------------- tables  --------------
     Fit_Tables  freeTables;
     Fit_Tables  busySharable;
-    LinkedQueue<Table*>  busyNoShare;
+    Fit_Tables  busyNoShare;
 
     int currentTime;        // current time indicator
 
@@ -81,5 +81,7 @@ public:
    bool freeOrderChef(Order* od);   // free the chef of an order
    bool freeOrderTable(DineInOrder* dinorder);     // free a table
    bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter
+   
 
+   bool RemoveTable(Fit_Tables& t,int  id);
 };

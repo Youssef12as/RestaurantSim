@@ -400,7 +400,11 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             dinein->setAssignedChef(tempChef);
         }
-        if(assigned) cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+        if (assigned)
+        {
+            od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+        }
         return assigned;
     }
 
@@ -458,17 +462,24 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 bool Restaurant::assignToTable(Order* od)
 {
     DineInOrder* dinein = (DineInOrder*)od;
-    Table* temptable = busySharable.GetBest(dinein->getSeats());
+    if (!dinein)     return false;
+    Table* temptable = nullptr;
+    if (dinein->getCanShare()== true)    
+    {
+        temptable= busySharable.GetBest(dinein->getSeats());// confirm if the it allow sharing
+        if (temptable) RemoveTable(busySharable, temptable->GetId()); //if we found in busysharable remove it 
+    }
     if (temptable == nullptr) {
         temptable = freeTables.GetBest(dinein->getSeats());
+        if (temptable) RemoveTable(freeTables, temptable->GetId());
     }
     if (temptable != nullptr) {     // if i got a table
         dinein->setAssignedTable(temptable);    // assign it
         temptable->setBusySeats(dinein->getSeats()); // update free seats
-        if (temptable->GetFreeSeats() > 0) {        // put it in the proper list
-            busySharable.enqueue(temptable, -temptable->GetFreeSeats());
+        if (temptable->GetFreeSeats() > 0&& dinein->getCanShare()==true) {        // put it in the proper list
+            busySharable.enqueue(temptable, -temptable->GetFreeSeats());// if there is some empty seat and the customer can share
         }
-        else busyNoShare.enqueue(temptable);
+        else busyNoShare.enqueue(temptable,-temptable->GetFreeSeats());//if it is completely full or  the customer refused to share
 
         inServOrders.enqueue(od, -dinein->getDuration());   // move the order to inservice
         return true;
@@ -543,8 +554,11 @@ bool Restaurant::freeOrderChef(Order* od)
 bool Restaurant::freeOrderTable(DineInOrder* dinorder)
 {
     Table* temptable = dinorder->getAssignedTable();    // get the order table
-    if (temptable) {
+    if (temptable) {// the table is possible in either busySharable or busyNoshare so remove it in both
+        RemoveTable(busySharable, temptable->GetId()); 
+        RemoveTable(busyNoShare, temptable->GetId());
         temptable->freeSeats(dinorder->getSeats());
+        dinorder->setAssignedTable(nullptr);
         if (temptable->getBusySeats() == 0) {           // place it in the right list
             freeTables.enqueue(temptable, -temptable->GetFreeSeats());
         }
@@ -569,5 +583,24 @@ bool Restaurant::freeOrderScooter(DeliveryOrder* deliorder) // missing : check i
     }
     
     return false;
+}
+
+bool Restaurant::RemoveTable(Fit_Tables& t, int id)
+{
+    Table* tempTable;
+    int pri;
+    Fit_Tables temp ;
+    bool found = false;
+    while (t.dequeue(tempTable, pri))
+    {
+        if (!found && tempTable->GetId() == id)
+        {
+            found = true;
+            continue;
+        }
+        temp.enqueue(tempTable,pri);
+    }
+    while (temp.dequeue(tempTable,pri)) t.enqueue(tempTable, pri);
+    return found;
 }
 
