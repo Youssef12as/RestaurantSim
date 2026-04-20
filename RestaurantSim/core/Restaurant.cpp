@@ -2,7 +2,8 @@
 #include <cstdlib>   // rand, srand
 #include <ctime>     // time
 #include <random>
-
+#include"../actions/RequestAction.h"
+#include"../actions/CancelAction.h"
 Restaurant::Restaurant()
 {
 	pUI = new UI;
@@ -604,3 +605,81 @@ bool Restaurant::RemoveTable(Fit_Tables& t, int id)
     return found;
 }
 
+bool Restaurant::LoadInputFile(const string& filename)
+{
+    ifstream inputFile(filename);
+    if (!inputFile.is_open())   return false;
+
+    float CN_Speed, CS_Speed;
+    int Scooter_Speed, Main_Dur, M;// M for the number of orders action
+    inputFile >> num_CN >> num_CS;
+    inputFile >> CN_Speed >> CS_Speed;
+    for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
+    for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
+    inputFile >> Scooter_Count >> Scooter_Speed;
+    inputFile >> Main_Ords >> Main_Dur;
+    for (int i = 0; i < Scooter_Count; i++)
+    {
+        Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
+        freeScooters.enqueue(sco,-sco->GetDistance());
+    }
+    inputFile >> total_Table;
+    int createdTable = 0;
+    while (createdTable < total_Table)
+    {
+        int Count, capacity;
+        inputFile >> Count >> capacity;
+        for (int i = 0; i < Count && createdTable < total_Table; i++)
+        {
+            Table* table = new Table(capacity);
+            freeTables.enqueue(table, -table->GetFreeSeats());
+            createdTable++;
+        }
+    }
+    inputFile >> TH;
+    inputFile >> M;
+    for (int i = 0; i < M; i++)
+    {
+        char letter;
+        inputFile >> letter;
+        if (letter == 'Q')
+        {
+            string TYP;
+            int TQ, ID, SIZE;
+            float Price;
+            inputFile >> TYP >> TQ >> ID >> SIZE >> Price;
+            Action* action = nullptr;
+            if (TYP == "ODG" || TYP == "ODN")
+            {
+                int seats, duration;
+                bool canShare;
+                char chshare;
+                inputFile >> seats >> duration >> chshare;
+                canShare = chshare == 'Y';
+                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, seats, duration, canShare);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OVC" || TYP == "OVG" || TYP == "OVN")
+            {
+                float distance;
+                inputFile >> distance;
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price, distance);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OT")
+            {
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price);
+                actions.enqueue(action);
+            }
+        }
+        else if (letter == 'X')
+        {
+            int Tcancel, ID;
+            inputFile >> Tcancel >> ID;
+            Action* act = new CancelAction(this,Tcancel, ID);
+            actions.enqueue(act);
+        }
+    }
+    inputFile.close();
+    return true;
+}
