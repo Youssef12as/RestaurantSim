@@ -24,44 +24,45 @@ private:
     LinkedQueue<Action*> actions;
 
     // --------------------pending orders--------------
-    LinkedQueue<Order*> pendODG;
-    LinkedQueue<Order*> pendODN;
-    LinkedQueue<Order*> pendOT;
-    derivedQueue        pendOVC;
-    priQueue<Order*>    pendOVG;
-    LinkedQueue<Order*> pendOVN;
+    LinkedQueue<Order*> pendODG;    //fcfs
+    LinkedQueue<Order*> pendODN;    //fcfs
+    LinkedQueue<Order*> pendOT;     //fcfs
+    derivedQueue        pendOVC;    //fcfs, cancelling an order
+    priQueue<Order*>    pendOVG;    //ordered according to the priority of the ovg
+    LinkedQueue<Order*> pendOVN;    // fcfs
 
     // --------------------coocking orders--------------
-    CookingOrders       cooking;
+    CookingOrders       cooking;    //ordered by finish time to check the peek only, cancelling an order
 
     // -------------------ready orders----------------
-    LinkedQueue<Order*> readyOT;
-    LinkedQueue<Order*> readyOD;
-    derivedQueue        readyOV;
+    LinkedQueue<Order*> readyOT;    //fcfs
+    LinkedQueue<Order*> readyOD;    //fcfs
+    derivedQueue        readyOV;    //fcfs, cancelling an order
     
     // --------------------inservice orders--------------
-    priQueue<Order*>    inServOrders;
+    priQueue<Order*>    inServOrders;   //ordered by the end of service time 
 
     // --------------------finished orders--------------
-    ArrayStack<Order*>    finishedOrders;
+    ArrayStack<Order*>    finishedOrders;   //stack to print from last finished to the first
 
     // --------------------cancelled orders--------------
-    LinkedQueue<Order*> cancelledOrders;
+    LinkedQueue<Order*> cancelledOrders;    //to be printed by their order of cancellation
 
     // -------------------- chefs --------------
-    LinkedQueue<Chef*>  availCN;
-    LinkedQueue<Chef*>  availCS;
+    LinkedQueue<Chef*>  availCN;    //fcfs
+    LinkedQueue<Chef*>  availCS;    //fcfs
 
     // -------------------- scooters --------------
-    priQueue<Scooter*>  freeScooters;
-    priQueue<Scooter*>  backScooters;
-    LinkedQueue<Scooter*> maintScooters;
+    priQueue<Scooter*>  freeScooters;   //ordered by the least distance moved
+    priQueue<Scooter*>  backScooters;   //order by the first to return to the restaurant (the delivered order distance)
+    LinkedQueue<Scooter*> maintScooters;    //fcfs
 
     // -------------------- tables  --------------
     Fit_Tables  freeTables;
     Fit_Tables  busySharable;
     Fit_Tables  busyNoShare;
-
+    //-------------------------- bonus lists ---------------------------//
+    priQueue<Order*> overwaitOVG;   //order by highest Current time - TQ
     int currentTime;        // current time indicator
 
     UI* pUI;                // pointer for the ui class
