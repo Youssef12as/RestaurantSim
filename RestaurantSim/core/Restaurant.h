@@ -60,7 +60,7 @@ private:
     // -------------------- tables  --------------
     Fit_Tables  freeTables;     //ordered by the least number of seats
     Fit_Tables  busySharable;   //ordered by the least number of seats
-    LinkedQueue<Table*>  busyNoShare;   //doesnt need an order this is just a container (the tables are free when order is done)
+    Fit_Tables  busyNoShare;   //doesnt need an order this is just a container (the tables are free when order is done)
     //-------------------------- bonus lists ---------------------------//
     priQueue<Order*> overwaitOVG;   //order by highest Current time - TQ
 
@@ -92,4 +92,8 @@ public:
 
    // The input file
    bool LoadInputFile(const string& filename);
+
+
+
+   void AssignPendingToChefs();
 };
