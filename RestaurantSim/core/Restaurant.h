@@ -111,5 +111,6 @@ public:
    bool LoadInputFile(const string& filename);
 
 
-   
+
+   void AssignPendingToChefs();
 };
