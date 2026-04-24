@@ -15,6 +15,12 @@ Restaurant::~Restaurant()
 	delete pUI;
 }
 
+
+void Restaurant::main_simulation()
+{
+
+}
+
 void Restaurant::randomSimulate()
 {
 
@@ -887,4 +893,6 @@ bool Restaurant::LoadInputFile(const string& filename)
     inputFile.close();
     return true;
 }
+
+
 
