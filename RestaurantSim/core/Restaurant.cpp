@@ -2,7 +2,8 @@
 #include <cstdlib>   // rand, srand
 #include <ctime>     // time
 #include <random>
-
+#include"../actions/RequestAction.h"
+#include"../actions/CancelAction.h"
 Restaurant::Restaurant()
 {
 	pUI = new UI;
@@ -476,17 +477,24 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 bool Restaurant::assignToTable(Order* od)
 {
     DineInOrder* dinein = (DineInOrder*)od;
-    Table* temptable = busySharable.GetBest(dinein->getSeats());
+    if (!dinein)     return false;
+    Table* temptable = nullptr;
+    if (dinein->getCanShare()== true)    
+    {
+        temptable= busySharable.GetBest(dinein->getSeats());// confirm if the it allow sharing
+        if (temptable) RemoveTable(busySharable, temptable->GetId()); //if we found in busysharable remove it 
+    }
     if (temptable == nullptr) {
         temptable = freeTables.GetBest(dinein->getSeats());
+        if (temptable) RemoveTable(freeTables, temptable->GetId());
     }
     if (temptable != nullptr) {     // if i got a table
         dinein->setAssignedTable(temptable);    // assign it
         temptable->setBusySeats(dinein->getSeats()); // update free seats
-        if (temptable->GetFreeSeats() > 0) {        // put it in the proper list
-            busySharable.enqueue(temptable, -temptable->GetFreeSeats());
+        if (temptable->GetFreeSeats() > 0&& dinein->getCanShare()==true) {        // put it in the proper list
+            busySharable.enqueue(temptable, -temptable->GetFreeSeats());// if there is some empty seat and the customer can share
         }
-        else busyNoShare.enqueue(temptable);
+        else busyNoShare.enqueue(temptable,-temptable->GetFreeSeats());//if it is completely full or  the customer refused to share
 
         inServOrders.enqueue(od, -dinein->getDuration());   // move the order to inservice
         return true;
@@ -561,8 +569,11 @@ bool Restaurant::freeOrderChef(Order* od)
 bool Restaurant::freeOrderTable(DineInOrder* dinorder)
 {
     Table* temptable = dinorder->getAssignedTable();    // get the order table
-    if (temptable) {
+    if (temptable) {// the table is possible in either busySharable or busyNoshare so remove it in both
+        RemoveTable(busySharable, temptable->GetId()); 
+        RemoveTable(busyNoShare, temptable->GetId());
         temptable->freeSeats(dinorder->getSeats());
+        dinorder->setAssignedTable(nullptr);
         if (temptable->getBusySeats() == 0) {           // place it in the right list
             freeTables.enqueue(temptable, -temptable->GetFreeSeats());
         }
@@ -589,3 +600,100 @@ bool Restaurant::freeOrderScooter(DeliveryOrder* deliorder) // missing : check i
     return false;
 }
 
+bool Restaurant::RemoveTable(Fit_Tables& t, int id)
+{
+    Table* tempTable;
+    int pri;
+    Fit_Tables temp ;
+    bool found = false;
+    while (t.dequeue(tempTable, pri))
+    {
+        if (!found && tempTable->GetId() == id)
+        {
+            found = true;
+            continue;
+        }
+        temp.enqueue(tempTable,pri);
+    }
+    while (temp.dequeue(tempTable,pri)) t.enqueue(tempTable, pri);
+    return found;
+}
+
+bool Restaurant::LoadInputFile(const string& filename)
+{
+    ifstream inputFile(filename);
+    if (!inputFile.is_open())   return false;
+
+    float CN_Speed, CS_Speed;
+    int Scooter_Speed, Main_Dur, M;// M for the number of orders action
+    inputFile >> num_CN >> num_CS;
+    inputFile >> CN_Speed >> CS_Speed;
+    for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
+    for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
+    inputFile >> Scooter_Count >> Scooter_Speed;
+    inputFile >> Main_Ords >> Main_Dur;
+    for (int i = 0; i < Scooter_Count; i++)
+    {
+        Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
+        freeScooters.enqueue(sco,-sco->GetDistance());
+    }
+    inputFile >> total_Table;
+    int createdTable = 0;
+    while (createdTable < total_Table)
+    {
+        int Count, capacity;
+        inputFile >> Count >> capacity;
+        for (int i = 0; i < Count && createdTable < total_Table; i++)
+        {
+            Table* table = new Table(capacity);
+            freeTables.enqueue(table, -table->GetFreeSeats());
+            createdTable++;
+        }
+    }
+    inputFile >> TH;
+    inputFile >> M;
+    for (int i = 0; i < M; i++)
+    {
+        char letter;
+        inputFile >> letter;
+        if (letter == 'Q')
+        {
+            string TYP;
+            int TQ, ID, SIZE;
+            float Price;
+            inputFile >> TYP >> TQ >> ID >> SIZE >> Price;
+            Action* action = nullptr;
+            if (TYP == "ODG" || TYP == "ODN")
+            {
+                int seats, duration;
+                bool canShare;
+                char chshare;
+                inputFile >> seats >> duration >> chshare;
+                canShare = chshare == 'Y';
+                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, seats, duration, canShare);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OVC" || TYP == "OVG" || TYP == "OVN")
+            {
+                float distance;
+                inputFile >> distance;
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price, distance);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OT")
+            {
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price);
+                actions.enqueue(action);
+            }
+        }
+        else if (letter == 'X')
+        {
+            int Tcancel, ID;
+            inputFile >> Tcancel >> ID;
+            Action* act = new CancelAction(this,Tcancel, ID);
+            actions.enqueue(act);
+        }
+    }
+    inputFile.close();
+    return true;
+}

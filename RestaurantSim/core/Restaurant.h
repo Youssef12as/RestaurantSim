@@ -7,7 +7,8 @@
 #include "../entities/Order.h"
 #include "../Derived DS/derivedQueue.h"
 #include "UI.h"
-
+#include<fstream>
+#include<string>
 using namespace std;
 
 class Order;
@@ -67,6 +68,8 @@ private:
 
     UI* pUI;                // pointer for the ui class
 
+    // for statistic // maybe I will add more later 
+    int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH;
 public:
     Restaurant();
     ~Restaurant();
@@ -83,5 +86,10 @@ public:
    bool freeOrderChef(Order* od);   // free the chef of an order
    bool freeOrderTable(DineInOrder* dinorder);     // free a table
    bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter
+   
 
+   bool RemoveTable(Fit_Tables& t,int  id);
+
+   // The input file
+   bool LoadInputFile(const string& filename);
 };
