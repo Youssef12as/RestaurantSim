@@ -384,6 +384,7 @@ void Restaurant::randomSimulate()
 //----------------------------------------------------------------------------------//
 
 
+
 bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 {
     // if the order is dinein
@@ -697,3 +698,91 @@ bool Restaurant::LoadInputFile(const string& filename)
     inputFile.close();
     return true;
 }
+
+
+
+
+
+
+
+
+void Restaurant::AssignPendingToChefs()
+{
+
+
+    while (true) {
+
+        bool hasCN = (availCN.GetCount() > 0);
+        bool hasCS = (availCS.GetCount() > 0);
+        if (!hasCN && !hasCS) {
+            break;
+        }
+
+        Order* oldestOrder = nullptr;
+        int minTime = 999999912;
+
+        Order* temp = nullptr;
+        int pri = 0;
+
+
+
+        if (hasCS && pendODG.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if ((hasCN || hasCS) && pendODN.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCN && pendOT.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if ((hasCN || hasCS) && pendOVC.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCS && pendOVG.peek(temp, pri)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCN && pendOVN.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (oldestOrder == nullptr) {
+            break;
+        }
+
+        bool assigned = assignToChef(oldestOrder);
+
+        if (assigned) {
+            string type = oldestOrder->getType();
+
+            if (type == "ODG") {
+                pendODG.dequeue(temp);
+            }
+            else if (type == "ODN") {
+                pendODN.dequeue(temp);
+            }
+            else if (type == "OT") {
+                pendOT.dequeue(temp);
+            }
+            else if (type == "OVC") {
+                pendOVC.dequeue(temp);
+            }
+            else if (type == "OVG") {
+                pendOVG.dequeue(temp, pri);
+            }
+            else if (type == "OVN") {
+                pendOVN.dequeue(temp);
+            }
+
+
+            else {
+                break;
+            }
+        }
+    }
+}
+
