@@ -408,10 +408,9 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             dinein->setAssignedChef(tempChef);
         }
-        if (assigned)
-        {
-            od->setTA(currentTime);
+        if (assigned) {
             cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+            od->setTA(currentTime);
         }
         return assigned;
     }
@@ -444,7 +443,11 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             deliv->setAssignedChef(tempChef);
         }
-        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
+        if (assigned) {
+            cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed()));
+            od->setTA(currentTime);
+        }
+
         return assigned;
     }
 
@@ -460,7 +463,11 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         }
         take->setAssignedChef(tempChef);
 
-        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
+        if (assigned) {
+            cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed()));
+            od->setTA(currentTime);
+        }
+
         return assigned;
     }
 

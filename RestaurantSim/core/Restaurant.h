@@ -21,7 +21,7 @@ class UI;
 class Restaurant {
 private:
     // --------------------Actions--------------
-    LinkedQueue<Action*> actions;
+    LinkedQueue<Action*> actions;   //fcfs
 
     // --------------------pending orders--------------
     LinkedQueue<Order*> pendODG;    //fcfs
@@ -58,11 +58,12 @@ private:
     LinkedQueue<Scooter*> maintScooters;    //fcfs
 
     // -------------------- tables  --------------
-    Fit_Tables  freeTables;
-    Fit_Tables  busySharable;
-    Fit_Tables  busyNoShare;
+    Fit_Tables  freeTables;     //ordered by the least number of seats
+    Fit_Tables  busySharable;   //ordered by the least number of seats
+    LinkedQueue<Table*>  busyNoShare;   //doesnt need an order this is just a container (the tables are free when order is done)
     //-------------------------- bonus lists ---------------------------//
     priQueue<Order*> overwaitOVG;   //order by highest Current time - TQ
+
     int currentTime;        // current time indicator
 
     UI* pUI;                // pointer for the ui class
