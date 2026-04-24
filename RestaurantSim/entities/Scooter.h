@@ -8,6 +8,7 @@ private:
     int Speed;
     int Main_Dur;
     int Distance_Cut;
+    int Tmaint;     //time when the scooter back from maint
 
     int DeliveredOrders;
     static int ScooterCount;
@@ -55,6 +56,18 @@ public:
         if (!o) { out << "[null scooter]"; return out; }
         o->print();
         return out;
+    }
+
+    void setTmain(int current) {
+        Tmaint = current + Main_Dur;
+    }
+
+    int getFinishMaint() {
+        return Tmaint;
+    }
+
+    void resetTmaint() {
+        Tmaint = 0;
     }
    
 
