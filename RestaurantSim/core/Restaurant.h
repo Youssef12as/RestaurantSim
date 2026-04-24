@@ -21,7 +21,7 @@ class UI;
 class Restaurant {
 private:
     // --------------------Actions--------------
-    LinkedQueue<Action*> actions;
+    LinkedQueue<Action*> actions;   //fcfs
 
     // --------------------pending orders--------------
     LinkedQueue<Order*> pendODG;    //fcfs
