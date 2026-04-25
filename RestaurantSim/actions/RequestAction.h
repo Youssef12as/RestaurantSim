@@ -66,8 +66,7 @@ public:
 
 		//then add it to the appropiate list in the retaurant
 
-		//pRest->AddOrderToPending(newOrder);
-
+		pRest->AddOrderToPending(newOrder);
 	}
 
 	int getTQ() const {

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "Scooter.h"
 
 using namespace std;
 
@@ -81,7 +82,7 @@ public:
         }
     }
 
-    int getExpectedFinishTime(float chefSpeed) const {
+    int getExpectedReadyTime(float chefSpeed) const {
         if (TA == -1) {
             return -1;
         }
@@ -89,6 +90,8 @@ public:
             return TA + (int)ceil((float)size / chefSpeed);
         }
     }
+
+    virtual int getExpectedFinishTime() const { return -1; }
 
     virtual void print() const {
         cout << id;
@@ -120,6 +123,16 @@ public:
     Table* getAssignedTable() const { return assignedTable; }
     void setAssignedTable(Table* t) { assignedTable = t; }
 
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        else {
+            return TS + duration;
+        }
+    }
+
+
 };
 
 class DeliveryOrder : public Order {
@@ -138,6 +151,18 @@ public:
 
     float getOVGPriority(float w1, float w2, float w3) const {
         return w1 * price + w2 * size - w3 * distance;
+    }
+
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        if (assignedScooter == nullptr) {
+            return -1;
+        }
+        else {
+            return TS + ceil(distance / assignedScooter->getSpeed());
+        }
     }
 
 };

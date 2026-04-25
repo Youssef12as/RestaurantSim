@@ -60,14 +60,14 @@ void UI::PrintEndSilent()const
 
 void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
     LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
-    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV,
+    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait,
     priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
     , Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
     cout << "\nCurrent Timestep: " << timestep << "\n";
 
-    //cout << "===============   Actions List   ================ \n";   //this is not required for this phase
-    //cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
+    cout << "===============   Actions List   ================ \n";   //this is not required for this phase
+    cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
     cout << "--------------     Pending Orders IDs ---------------------- \n";
     cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done
@@ -88,6 +88,9 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << rOD.GetCount() << " OD: ";  rOD.print();  cout << "\n\n";     //done
     cout << rOT.GetCount() << " OT: ";  rOT.print();  cout << "\n\n";     //done
     cout << rOV.GetCount() << " OV: "; rOV.print(); cout << "\n\n";    //done
+
+    cout << "--------------     Ready Overwait Orders IDs ---------------------- \n";
+    cout << overWait.GetCount() << " OV: "; overWait.print(); cout << "\n\n";
            
     cout << "--------------   Available scooters IDs ----------------------- \n";
     cout << availScooters.GetCount() << " Scooters: "; availScooters.print(); cout << "\n\n";     //done

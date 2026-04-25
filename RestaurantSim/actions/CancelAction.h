@@ -27,19 +27,15 @@ public:
 	} // all the parameters needed are got in the construction
 	void Act() {
 		//search for the order in the pending ov, cooking and ready ov lists
-
-		/*
-		if (pRest->IsPending(ID)) {
-			pRest->CancelPendingOrder(ID);
+		if (pRest->cancelOrderFromPending(ID)) {
+			return;
 		}
-		else if(pRest->IsCooking(ID)) {
-			pRest->CancelCookingOrder(ID);
+		else if(pRest->cancelOrderFromCooking(ID)) {
+			return;
 		}
-		else if (pRest->IsReady(ID)) {
-			pRest->CancelReadyOrder(ID);
+		else if (pRest->cancelOrderFromReady(ID)) {
+			return;
 		}
-		*/
-		
 	}
 
 	int getTcancel() const {
