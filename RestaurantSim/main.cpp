@@ -14,7 +14,7 @@ int Table::TableCount = 1;
 int main() {
 
 	Restaurant myres;
-	myres.randomSimulate();
+	myres.main_simulation();
 
 	
 	return 0;

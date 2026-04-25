@@ -66,8 +66,8 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
 {
     cout << "\nCurrent Timestep: " << timestep << "\n";
 
-    //cout << "===============   Actions List   ================ \n";   //this is not required for this phase
-    //cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
+    cout << "===============   Actions List   ================ \n";   //this is not required for this phase
+    cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
     cout << "--------------     Pending Orders IDs ---------------------- \n";
     cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done

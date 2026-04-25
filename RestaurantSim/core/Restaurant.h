@@ -71,7 +71,7 @@ private:
 
 
     // for statistic // maybe I will add more later 
-    int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH;
+    int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH, orderCount;
 public:
     Restaurant();
     ~Restaurant();
@@ -91,7 +91,7 @@ public:
    //Scooter
    bool assignToScooter(Order* od); // assign an order to scooter and put the order in inservice list
    bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter from an order then send it back or to the res
-   void check_scooters_lists();         // check maintscooter and back scooters to the free scooters
+   void check_scooters_lists();//done         // check maintscooter and back scooters to the free scooters
 
 
    //Orders
@@ -100,11 +100,14 @@ public:
    bool cancelOrderFromReady(int id);   
    bool AddOrderToPending(Order* o);    //add order to a list
 
-   void check_cooking_orders();         //move order from cooking to ready
-   void check_ready_orders();          //move oreders from ready to service
-   void check_inservice_orders();       // move orders from service to finished
-   void check_overwait_orders();        // move the overwait order to the overwait list
-   
+   void check_cooking_orders(); //done        //move order from cooking to ready
+   void check_ready_orders();  //done        //move oreders from ready to service
+   void check_inservice_orders();//done       // move orders from service to finished
+   void check_overwait_orders();// done        // move the overwait order to the overwait list
+   void AssignPendingToChefs();//done         // move the orders from pending to cooking
+
+   //action
+   void check_action_list(); //done
 
    
    // The input file
@@ -112,5 +115,6 @@ public:
 
 
 
-   void AssignPendingToChefs();
+   
+   void main_simulation();
 };

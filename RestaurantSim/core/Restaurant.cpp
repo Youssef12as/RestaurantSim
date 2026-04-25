@@ -8,6 +8,7 @@ Restaurant::Restaurant()
 {
 	pUI = new UI;
     currentTime = 1;
+    orderCount = 0;
 }
 
 Restaurant::~Restaurant()
@@ -18,7 +19,50 @@ Restaurant::~Restaurant()
 
 void Restaurant::main_simulation()
 {
+    string inFile = "input3.txt";   // get input file
+    string outFile = ""; // get output file
+    ProgramMode currentMode = pUI->ReadMode();   //get mode
+    if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
 
+    //load input file
+    LoadInputFile(inFile);
+    cout << "orders:" << orderCount << endl;
+    if (currentMode == ProgramMode::Interactive) {
+        pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
+            availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG,
+            freeScooters, maintScooters, backScooters, freeTables, busySharable,
+            inServOrders, cancelledOrders, finishedOrders);
+
+        pUI->WaitForNextStep();
+    }
+    pUI->WaitForNextStep();
+    while (finishedOrders.GetCount() + cancelledOrders.GetCount() < orderCount) {
+        
+        check_action_list();        // execute the actions in the current time step
+
+        check_inservice_orders();    // finish the orders in the inservice to free tables and scooters
+
+        check_scooters_lists();      // recover the the back scooters
+
+        check_cooking_orders();      // get the cooking orders ready to free up chefs
+
+        check_ready_orders();        // get the ready order to inservice
+
+        check_overwait_orders();    // check the over wait orders
+
+        AssignPendingToChefs();     //assign pending orders to the chefs
+
+        if (currentMode == ProgramMode::Interactive) {
+            pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
+                availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG,
+                freeScooters, maintScooters, backScooters, freeTables, busySharable,
+                inServOrders, cancelledOrders, finishedOrders);
+            pUI->WaitForNextStep();
+        }
+        currentTime++;
+
+    }
+    pUI->PrintEndSilent();
 }
 
 void Restaurant::randomSimulate()
@@ -763,21 +807,21 @@ void Restaurant::check_cooking_orders()
         DineInOrder* dinein = dynamic_cast<DineInOrder*>(temporder);
         if (dinein != nullptr) {
             readyOD.enqueue(temporder);
-            return;
+            continue;
         }
 
         //if the order is delivery
         DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(temporder);
         if (deliv != nullptr) {
             readyOV.enqueue(temporder);
-            return;
+            continue;
         }
 
         // if the order is takeaway
         TakeawayOrder* take = dynamic_cast<TakeawayOrder*>(temporder);
         if (take != nullptr) {
             readyOT.enqueue(temporder);
-            return;
+            continue;
         }
     }
 }
@@ -786,120 +830,32 @@ void Restaurant::check_ready_orders()
 {
     //first OD order
     Order* od = nullptr;
-    if (readyOD.peek(od))   //check the list
+    int pri;
+    while(readyOD.peek(od))   //check the list
     {
         if (assignToTable(od)) {    //if the order is assigned to table, it will move to service list
             readyOD.dequeue(od);    //dequeue it from the ready list
         }
+        else break;
     }
    
-    if (readyOT.dequeue(od)) {
+    while(readyOT.dequeue(od)) {
         od->setTF(currentTime + 1);
         finishedOrders.push(od);
-
     }
-    if (readyOV.peek(od)) {
+    while (overWaitOVG.peek(od,pri)) {      //first assign all overwait OVG
+        if (assignToScooter(od)) {
+            overWaitOVG.dequeue(od, pri);
+        }
+        else break;
+    }
+    while(readyOV.peek(od)) {
         if (assignToScooter(od)) {      // if order is assigned to scooter, it will be moved to servise list
             readyOV.dequeue(od);
         }
+        else break;
     }
-            
-
 }
-//----------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------//
-
-
-
-//----------------------------------------------------------------------------------//
-//------------------------- Files functions ----------------------------------------//
-//----------------------------------------------------------------------------------//
-bool Restaurant::LoadInputFile(const string& filename)
-{
-    ifstream inputFile(filename);
-    if (!inputFile.is_open())   return false;
-
-    float CN_Speed, CS_Speed;
-    int Scooter_Speed, Main_Dur, M;// M for the number of orders action
-    inputFile >> num_CN >> num_CS;
-    inputFile >> CN_Speed >> CS_Speed;
-    for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
-    for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
-    inputFile >> Scooter_Count >> Scooter_Speed;
-    inputFile >> Main_Ords >> Main_Dur;
-    for (int i = 0; i < Scooter_Count; i++)
-    {
-        Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
-        freeScooters.enqueue(sco,-sco->GetDistance());
-    }
-    inputFile >> total_Table;
-    int createdTable = 0;
-    while (createdTable < total_Table)
-    {
-        int Count, capacity;
-        inputFile >> Count >> capacity;
-        for (int i = 0; i < Count && createdTable < total_Table; i++)
-        {
-            Table* table = new Table(capacity);
-            freeTables.enqueue(table, -table->GetFreeSeats());
-            createdTable++;
-        }
-    }
-    inputFile >> TH;
-    inputFile >> M;
-    for (int i = 0; i < M; i++)
-    {
-        char letter;
-        inputFile >> letter;
-        if (letter == 'Q')
-        {
-            string TYP;
-            int TQ, ID, SIZE;
-            float Price;
-            inputFile >> TYP >> TQ >> ID >> SIZE >> Price;
-            Action* action = nullptr;
-            if (TYP == "ODG" || TYP == "ODN")
-            {
-                int seats, duration;
-                bool canShare;
-                char chshare;
-                inputFile >> seats >> duration >> chshare;
-                canShare = chshare == 'Y';
-                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, seats, duration, canShare);
-                actions.enqueue(action);
-            }
-            else if (TYP == "OVC" || TYP == "OVG" || TYP == "OVN")
-            {
-                float distance;
-                inputFile >> distance;
-                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price, distance);
-                actions.enqueue(action);
-            }
-            else if (TYP == "OT")
-            {
-                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price);
-                actions.enqueue(action);
-            }
-        }
-        else if (letter == 'X')
-        {
-            int Tcancel, ID;
-            inputFile >> Tcancel >> ID;
-            Action* act = new CancelAction(this,Tcancel, ID);
-            actions.enqueue(act);
-        }
-    }
-    inputFile.close();
-    return true;
-}
-
-
-
-
-
-
-
 
 void Restaurant::AssignPendingToChefs()
 {
@@ -914,7 +870,7 @@ void Restaurant::AssignPendingToChefs()
         }
 
         Order* oldestOrder = nullptr;
-        int minTime = 999999912;
+        int minTime = INT16_MAX;
 
         Order* temp = nullptr;
         int pri = 0;
@@ -980,4 +936,121 @@ void Restaurant::AssignPendingToChefs()
         }
     }
 }
+void Restaurant::check_action_list()
+{
+    Action* tempaction;
+    while (actions.peek(tempaction)) {
+        RequestAction* req = dynamic_cast<RequestAction*>(tempaction);
+        if (req != nullptr) {
+            if (req->getTQ() > currentTime) return;
+            actions.dequeue(tempaction);
+            tempaction->Act();
+        }
+        else {
+            CancelAction* cancel = dynamic_cast<CancelAction*>(tempaction);
+            if (cancel != nullptr) {
+                if (cancel->getTcancel() > currentTime) return;
+                actions.dequeue(tempaction);
+                tempaction->Act();
+            }
+        }
+    }
+}
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+
+
+//----------------------------------------------------------------------------------//
+//------------------------- Files functions ----------------------------------------//
+//----------------------------------------------------------------------------------//
+bool Restaurant::LoadInputFile(const string& filename)
+{
+    ifstream inputFile(filename);
+    if (!inputFile.is_open())   return false;
+
+    float CN_Speed, CS_Speed;
+    int Scooter_Speed, Main_Dur, M;// M for the number of orders action (i changed it to actionscount)
+    inputFile >> num_CN >> num_CS;
+    inputFile >> CN_Speed >> CS_Speed;
+    for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
+    for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
+    inputFile >> Scooter_Count >> Scooter_Speed;
+    inputFile >> Main_Ords >> Main_Dur;
+    for (int i = 0; i < Scooter_Count; i++)
+    {
+        Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
+        freeScooters.enqueue(sco,-sco->GetDistance());
+    }
+    inputFile >> total_Table;
+    int createdTable = 0;
+    while (createdTable < total_Table)
+    {
+        int Count, capacity;
+        inputFile >> Count >> capacity;
+        for (int i = 0; i < Count && createdTable < total_Table; i++)
+        {
+            Table* table = new Table(capacity);
+            freeTables.enqueue(table, -table->GetFreeSeats());
+            createdTable++;
+        }
+    }
+    inputFile >> TH;
+    inputFile >> M;
+    for (int i = 0; i < M; i++)
+    {
+        char letter;
+        inputFile >> letter;
+        if (letter == 'Q')
+        {
+            string TYP;
+            int TQ, ID, SIZE;
+            float Price;
+            inputFile >> TYP >> TQ >> ID >> SIZE >> Price;
+            Action* action = nullptr;
+            if (TYP == "ODG" || TYP == "ODN")
+            {
+                int seats, duration;
+                bool canShare;
+                char chshare;
+                inputFile >> seats >> duration >> chshare;
+                canShare = chshare == 'Y';
+                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, seats, duration, canShare);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OVC" || TYP == "OVG" || TYP == "OVN")
+            {
+                float distance;
+                inputFile >> distance;
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price, distance);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OT")
+            {
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price);
+                actions.enqueue(action);
+            }
+            orderCount++;
+        }
+        else if (letter == 'X')
+        {
+            int Tcancel, ID;
+            inputFile >> Tcancel >> ID;
+            Action* act = new CancelAction(this,Tcancel, ID);
+            actions.enqueue(act);
+        }
+    }
+    inputFile.close();
+    return true;
+}
+
+
+
+
+
+
+
+
+
 
