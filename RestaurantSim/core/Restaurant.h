@@ -72,6 +72,9 @@ private:
 
     // for statistic // maybe I will add more later 
     int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH, orderCount;
+    int numODG, numODN, numOT, numOVC, numOVG, numOVN;
+    int overwaitCount;
+    int totalChefBusyTime, totalScooterBusyTime;
 public:
     Restaurant();
     ~Restaurant();
@@ -112,7 +115,8 @@ public:
    
    // The input file
    bool LoadInputFile(const string& filename);
-
+   //The output file and statistic
+   bool GenerateOutputFile(const string& filename);
 
 
    

@@ -8,7 +8,10 @@ Restaurant::Restaurant()
 {
 	pUI = new UI;
     currentTime = 1;
-    orderCount = 0;
+    num_CS = num_CN = Scooter_Count = total_Table = Main_Ords = TH = orderCount = 0;
+    numODG = numODN = numOT = numOVC = numOVG = numOVN = 0;
+    overwaitCount = 0;
+    totalChefBusyTime = totalScooterBusyTime = 0;
 }
 
 Restaurant::~Restaurant()
@@ -20,7 +23,7 @@ Restaurant::~Restaurant()
 void Restaurant::main_simulation()
 {
     string inFile = "input3.txt";   // get input file
-    string outFile = ""; // get output file
+    string outFile = "output3.txt"; // get output file
     ProgramMode currentMode = pUI->ReadMode();   //get mode
     if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
 
@@ -46,9 +49,9 @@ void Restaurant::main_simulation()
 
         check_cooking_orders();      // get the cooking orders ready to free up chefs
 
-        check_ready_orders();        // get the ready order to inservice
-
         check_overwait_orders();    // check the over wait orders
+
+        check_ready_orders();        // get the ready order to inservice
 
         AssignPendingToChefs();     //assign pending orders to the chefs
 
@@ -62,7 +65,8 @@ void Restaurant::main_simulation()
         currentTime++;
 
     }
-    pUI->PrintEndSilent();
+    GenerateOutputFile(outFile);
+    if (currentMode == ProgramMode::Silent) pUI->PrintEndSilent();
 }
 
 void Restaurant::randomSimulate()
@@ -457,8 +461,8 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             dinein->setAssignedChef(tempChef);
         }
         if (assigned) {
-            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
             od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
         }
         return assigned;
     }
@@ -492,8 +496,8 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             deliv->setAssignedChef(tempChef);
         }
         if (assigned) {
-            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
             od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
         }
 
         return assigned;
@@ -512,8 +516,8 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         take->setAssignedChef(tempChef);
 
         if (assigned) {
-            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
             od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
         }
 
         return assigned;
@@ -526,6 +530,8 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 bool Restaurant::freeOrderChef(Order* od)
 {
     if (od->getAssignedChef() != nullptr) {
+        // Accumulate chef busy time.
+        if (od->getTA() != -1 && od->getTR() != -1) totalChefBusyTime += od->getTR() - od->getTA();
         Chef* tempchef = od->getAssignedChef();
         tempchef->releaseOrder();
         if (tempchef->getType() == "CS") {
@@ -644,6 +650,8 @@ bool Restaurant::freeOrderScooter(DeliveryOrder* deliorder) // this is called be
 {
     Scooter* tempscooter = deliorder->getAssignedScooter();     // get the order scooter
     if (tempscooter) {
+        int tripTime = (int)ceil(deliorder->getDistance() / tempscooter->getSpeed());// Time needed to reach customer
+        totalScooterBusyTime += 2 * tripTime;  // going to customer + returning to restaurant
         tempscooter->incDist(deliorder->getDistance() * 2);     // increase total distance (it *2 because it needs to go and comeback)
         tempscooter->incrementDeliOreders();       // increase the orders delivered
         backScooters.enqueue(tempscooter, -(ceil(deliorder->getDistance() / tempscooter->getSpeed()) + currentTime)); // put it in scooters back ordered by the time step they will comeback they will cut back
@@ -699,6 +707,8 @@ bool Restaurant::cancelOrderFromCooking(int id)
 {
     Order* cancelledorder = nullptr;
     if (cooking.CancelOrder(id, cancelledorder)) {
+        // The order was cancelled while cooking.
+        cancelledorder->setTR(currentTime);// Set TR to currentTime so freeOrderChef() can count chef busy time.
         freeOrderChef(cancelledorder);
         cancelledOrders.enqueue(cancelledorder);
         return true;
@@ -721,28 +731,34 @@ bool Restaurant::AddOrderToPending(Order* o)
     string typ = o->getType();
     if (typ == "ODN") {
         pendODN.enqueue(o);
+        numODN++;
         return true;
     }
     else if (typ == "ODG") {
         pendODG.enqueue(o);
+        numODG++;
         return true;
     }
     else if (typ == "OT") {
         pendOT.enqueue(o);
+        numOT++;
         return true;
     }
     else if (typ == "OVC") {
         pendOVC.enqueue(o);
+        numOVC++;
         return true;
     }
     else if (typ == "OVN") {
         pendOVN.enqueue(o);
+        numOVN++;
         return true;
     }
     else if (typ == "OVG") {
         DeliveryOrder* deliv = (DeliveryOrder*)o;
         int pri = deliv->getOVGPriority(2, 2, 1);
         pendOVG.enqueue(o, pri);
+        numOVG++;
         return true;
     }
     else return false;
@@ -782,8 +798,9 @@ void Restaurant::check_overwait_orders()
     LinkedQueue<Order*> tempqueue;
     Order* temporder;
     while (readyOV.dequeue(temporder)) {
-        if (temporder->getType() == "OVG" && (currentTime - temporder->getTR() > TH)) {
+        if (temporder->getType() == "OVG" && temporder->getTR() != -1 && (currentTime - temporder->getTR() > TH)) {
             overWaitOVG.enqueue(temporder, -temporder->getTQ());
+            overwaitCount++;
             continue;
         }
         tempqueue.enqueue(temporder);
@@ -800,9 +817,8 @@ void Restaurant::check_cooking_orders()
     while (cooking.peek(temporder, pri)) {
         if (-pri > currentTime) break;
         cooking.dequeue(temporder, pri);
-        freeOrderChef(temporder);
         temporder->setTR(currentTime);
-
+        freeOrderChef(temporder);
         // if the order is dinein
         DineInOrder* dinein = dynamic_cast<DineInOrder*>(temporder);
         if (dinein != nullptr) {
@@ -839,8 +855,11 @@ void Restaurant::check_ready_orders()
         else break;
     }
    
-    while(readyOT.dequeue(od)) {
-        od->setTF(currentTime + 1);
+    while(readyOT.peek(od)) {
+        if (od->getTR() == -1 || currentTime - od->getTR() < 1) break;
+        readyOT.dequeue(od);
+        od->setTS(currentTime);//to avoid making TS = -1
+        od->setTF(currentTime);
         finishedOrders.push(od);
     }
     while (overWaitOVG.peek(od,pri)) {      //first assign all overwait OVG
@@ -849,6 +868,15 @@ void Restaurant::check_ready_orders()
         }
         else break;
     }
+    // Assign OVC orders first from readyOV.
+    int n = readyOV.GetCount();
+    for (int i = 0; i < n; i++)
+    {
+        readyOV.dequeue(od);
+        if (od->getType() == "OVC" && !freeScooters.isEmpty())  assignToScooter(od);
+        else  readyOV.enqueue(od);// if not OVC, or no scooter available return order back to readyOV
+    }
+    //Assign remaining readyOV orders by FCFS.
     while(readyOV.peek(od)) {
         if (assignToScooter(od)) {      // if order is assigned to scooter, it will be moved to servise list
             readyOV.dequeue(od);
@@ -859,10 +887,7 @@ void Restaurant::check_ready_orders()
 
 void Restaurant::AssignPendingToChefs()
 {
-
-
     while (true) {
-
         bool hasCN = (availCN.GetCount() > 0);
         bool hasCS = (availCS.GetCount() > 0);
         if (!hasCN && !hasCS) {
@@ -874,8 +899,6 @@ void Restaurant::AssignPendingToChefs()
 
         Order* temp = nullptr;
         int pri = 0;
-
-
 
         if (hasCS && pendODG.peek(temp)) {
             if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
@@ -889,11 +912,11 @@ void Restaurant::AssignPendingToChefs()
             if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
         }
 
-        if ((hasCN || hasCS) && pendOVC.peek(temp)) {
+        if (hasCS && pendOVG.peek(temp, pri)) {
             if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
         }
 
-        if (hasCS && pendOVG.peek(temp, pri)) {
+        if ((hasCN || hasCS) && pendOVC.peek(temp)) {
             if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
         }
 
@@ -1045,12 +1068,63 @@ bool Restaurant::LoadInputFile(const string& filename)
     return true;
 }
 
+bool Restaurant::GenerateOutputFile(const string& filename)
+{
+    ofstream outputFile(filename);
+    if (!outputFile.is_open())  return false;
 
+    // These sums are used to calculate averages for finished orders
+    double sumTi = 0, sumTc = 0, sumTw = 0, sumTserv = 0;
 
+    // Required output header for each finished order
+    outputFile << "TF \tID \tTQ \tTA \tTR \tTS \tTi \tTC \tTw \tTserv\n";
 
+    ArrayStack<Order*> tempFinish;    // Temporary stack to restore finishedOrders
+    Order* o = nullptr;
+    while (finishedOrders.pop(o))
+    {
+        outputFile << o->getTF() << "\t"<< o->getID() << "\t"<< o->getTQ() << "\t"<< o->getTA() << "\t"<< o->getTR() << "\t" << o->getTS() << "\t"<< o->getTi() << "\t"<< o->getTc() << "\t"<< o->getTw() << "\t"<< o->getTserv() << "\n";
 
+        // The checks are only safety checks.In a correct finished order, these values should never be -1
+        if (o->getTi() != -1)    sumTi += o->getTi();
+        if (o->getTc() != -1)    sumTc += o->getTc();
+        if (o->getTw() != -1)    sumTw += o->getTw();
+        if (o->getTserv() != -1) sumTserv += o->getTserv();
 
+        tempFinish.push(o);
+    }
+    while (tempFinish.pop(o))   finishedOrders.push(o); // Restore finishedOrders exactly as it was
 
+    int fi = finishedOrders.GetCount();// Number of finished orders
+    // Averages for all finished orders. // If fi == 0, keep averages as 0 to avoid division by zero.
+    double avgTi = fi ? sumTi / fi : 0.0;
+    double avgTc = fi ? sumTc / fi : 0.0;
+    double avgTw = fi ? sumTw / fi : 0.0;
+    double avgTserv = fi ? sumTserv / fi : 0.0;
 
+    // Percentages// If orderCount  == 0, keep percentages as 0 to avoid division by zero.
+    double finishedPercent = orderCount ? (fi * 100.0) / orderCount : 0.0;
+    double cancelledPercent = orderCount ? (cancelledOrders.GetCount() * 100.0) / orderCount : 0.0;
+    double overwaitPercent = orderCount ? (overwaitCount * 100.0) / orderCount : 0.0;
 
+    int simTime = currentTime - 1;// Simulation time.
 
+    // Chef utilization:
+    int numChefs = num_CN + num_CS;
+    double chefUtil = (simTime > 0 && numChefs > 0) ? (100.0 * totalChefBusyTime) / (simTime * numChefs) : 0.0;
+
+    // Scooter utilization:
+    double scooterUtil = (simTime > 0 && Scooter_Count > 0) ? (100.0 * totalScooterBusyTime) / (simTime * Scooter_Count): 0.0;
+
+    outputFile << "\n================ Statistics ================\n\n";
+    outputFile << "1- Total number of orders and total number of each order type = "<< orderCount << "\n\tODG = " << numODG<< "\n\tODN = " << numODN<< "\n\tOT  = " << numOT<< "\n\tOVC = " << numOVC<< "\n\tOVG = " << numOVG<< "\n\tOVN = " << numOVN << "\n";
+    outputFile << "2- Total number of chefs and total number of each type = "<< numChefs << "\n\tCN = " << num_CN<< "\n\tCS = " << num_CS << "\n";
+    outputFile << "3- Total number of scooters = " << Scooter_Count << "\n";
+    outputFile << "4- Percentage of finished orders and percentage of cancelled orders"<< "\n\tFinished Orders % = " << finishedPercent<< "%\n\tCancelled Orders % = " << cancelledPercent << "%\n";
+    outputFile << "5- Overwait Orders % = " << overwaitPercent << "%\n";
+    outputFile << "6- Average for Ti TC Tw Tserv for all finished orders"<< "\n\tAverage Ti = " << avgTi<< "\n\tAverage TC = " << avgTc<< "\n\tAverage Tw = " << avgTw<< "\n\tAverage Tserv = " << avgTserv << "\n";
+    outputFile << "7- Scooters Utilization % = " << scooterUtil << "%\n";
+    outputFile << "8- Chefs Utilization % = " << chefUtil << "%\n";
+    outputFile.close();
+    return true;
+}
