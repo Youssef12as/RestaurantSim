@@ -37,7 +37,7 @@ public:
             {
                 Chef* chefPtr = orderPtr->getAssignedChef();
                 if (chefPtr)
-                    enqueue(orderPtr, -orderPtr->getExpectedFinishTime(chefPtr->getSpeed()));
+                    enqueue(orderPtr, -orderPtr->getExpectedReadyTime(chefPtr->getSpeed()));
             }
         }
         return found;

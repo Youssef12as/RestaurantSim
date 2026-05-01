@@ -84,12 +84,23 @@ public:
             priNode<T>* ptr = head;
             while (ptr) {
                 cout << "[" << ptr->getItem() << ", ";
+                ComboOrder* combo = dynamic_cast<ComboOrder*>(ptr->getItem());
+                if (combo != nullptr) {
+                    for (int i = 0; i < combo->getScooterCount(); i++) {
+                        if (combo->getScooterAt(i))
+                            cout << "S" << combo->getScooterAt(i)->getID();
+                        if (i < combo->getScooterCount() - 1) cout << "+";
+                    }
+                    cout << "]";
+                    ptr = ptr->getNext();
+                    continue;
+                }
                 DineInOrder* dineIn = dynamic_cast<DineInOrder*>(ptr->getItem());
-                if (dineIn != nullptr) {
+                if (dineIn != nullptr && dineIn->getAssignedTable()) {
                     cout << "T" << dineIn->getAssignedTable()->GetId();
                 }
                 DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(ptr->getItem());
-                if (deliv != nullptr) {
+                if (deliv != nullptr && deliv->getAssignedScooter()) {
                     cout << "S" << deliv->getAssignedScooter()->getID();
                 }
                 cout << "]";

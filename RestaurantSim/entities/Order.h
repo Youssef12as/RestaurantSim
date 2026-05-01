@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "Scooter.h"
+#include "Chef.h"
 
 using namespace std;
 
@@ -81,7 +83,7 @@ public:
         }
     }
 
-    int getExpectedFinishTime(float chefSpeed) const {
+    int getExpectedReadyTime(float chefSpeed) const {
         if (TA == -1) {
             return -1;
         }
@@ -89,6 +91,8 @@ public:
             return TA + (int)ceil((float)size / chefSpeed);
         }
     }
+
+    virtual int getExpectedFinishTime() const { return -1; }
 
     virtual void print() const {
         cout << id;
@@ -120,6 +124,16 @@ public:
     Table* getAssignedTable() const { return assignedTable; }
     void setAssignedTable(Table* t) { assignedTable = t; }
 
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        else {
+            return TS + duration;
+        }
+    }
+
+
 };
 
 class DeliveryOrder : public Order {
@@ -140,6 +154,18 @@ public:
         return w1 * price + w2 * size - w3 * distance;
     }
 
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        if (assignedScooter == nullptr) {
+            return -1;
+        }
+        else {
+            return TS + ceil(distance / assignedScooter->getSpeed());
+        }
+    }
+
 };
 
 class TakeawayOrder : public Order {
@@ -148,4 +174,78 @@ public:
         : Order(id, type, TQ, size, price) {
     }
 
+};
+
+class ComboOrder : public Order {
+private:
+    float distance;
+    int numChefsNeeded;      // 1-4, at least 1 must be CS
+    int numScootersNeeded;   // 2+
+
+    Chef* chefs[4];
+    int chefCount;
+
+    Scooter* scooters[4];
+    int scooterCount;
+
+public:
+    ComboOrder(int id, int TQ, int size, float price,
+               float dist, int numChefs, int numScooters)
+        : Order(id, "OC", TQ, size, price), distance(dist),
+          numChefsNeeded(numChefs), numScootersNeeded(numScooters),
+          chefCount(0), scooterCount(0) {
+        for (int i = 0; i < 4; i++) { chefs[i] = nullptr; scooters[i] = nullptr; }
+    }
+
+    float getDistance() const { return distance; }
+    int getNumChefsNeeded() const { return numChefsNeeded; }
+    int getNumScootersNeeded() const { return numScootersNeeded; }
+    int getChefCount() const { return chefCount; }
+    int getScooterCount() const { return scooterCount; }
+
+    Chef* getChefAt(int i) const { return (i >= 0 && i < chefCount) ? chefs[i] : nullptr; }
+    Scooter* getScooterAt(int i) const { return (i >= 0 && i < scooterCount) ? scooters[i] : nullptr; }
+
+    bool addChef(Chef* c) {
+        if (chefCount >= numChefsNeeded || chefCount >= 4) return false;
+        chefs[chefCount++] = c;
+        return true;
+    }
+
+    bool addScooter(Scooter* s) {
+        if (scooterCount >= numScootersNeeded || scooterCount >= 4) return false;
+        scooters[scooterCount++] = s;
+        return true;
+    }
+
+    float getTotalChefSpeed() const {
+        float total = 0;
+        for (int i = 0; i < chefCount; i++) {
+            if (chefs[i]) total += chefs[i]->getSpeed();
+        }
+        return total;
+    }
+
+    int getComboReadyTime() const {
+        if (TA == -1 || chefCount == 0) return -1;
+        float totalSpeed = getTotalChefSpeed();
+        if (totalSpeed <= 0) return -1;
+        return TA + (int)ceil((float)size / totalSpeed);
+    }
+
+    int getExpectedFinishTime() const override {
+        if (TS == -1 || scooterCount == 0 || scooters[0] == nullptr) return -1;
+        return TS + (int)ceil(distance / scooters[0]->getSpeed());
+    }
+
+    void clearAllChefs() {
+        for (int i = 0; i < 4; i++) chefs[i] = nullptr;
+        chefCount = 0;
+        setAssignedChef(nullptr);
+    }
+
+    void clearAllScooters() {
+        for (int i = 0; i < 4; i++) scooters[i] = nullptr;
+        scooterCount = 0;
+    }
 };

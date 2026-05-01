@@ -12,6 +12,7 @@
 using namespace std;
 
 class Order;
+class ComboOrder;
 class Chef;
 class Scooter;
 class Table;
@@ -30,6 +31,7 @@ private:
     derivedQueue        pendOVC;    //fcfs, cancelling an order
     priQueue<Order*>    pendOVG;    //ordered according to the priority of the ovg
     LinkedQueue<Order*> pendOVN;    // fcfs
+    LinkedQueue<Order*> pendCombo;  //fcfs, highest priority COMBO orders
 
     // --------------------coocking orders--------------
     CookingOrders       cooking;    //ordered by finish time to check the peek only, cancelling an order
@@ -38,6 +40,8 @@ private:
     LinkedQueue<Order*> readyOT;    //fcfs
     LinkedQueue<Order*> readyOD;    //fcfs
     derivedQueue        readyOV;    //fcfs, cancelling an order
+    priQueue<Order*>    overWaitOVG;
+    LinkedQueue<Order*> readyCombo; //fcfs, highest priority COMBO ready orders
     
     // --------------------inservice orders--------------
     priQueue<Order*>    inServOrders;   //ordered by the end of service time 
@@ -68,32 +72,59 @@ private:
 
     UI* pUI;                // pointer for the ui class
 
-    // for statistic // maybe I will add more later 
-    int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH;
+
+    // for statistic
+    int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH, orderCount;
+    int numODG, numODN, numOT, numOVC, numOVG, numOVN, numCombo;
+    int overwaitCount;
+    int totalChefBusyTime, totalScooterBusyTime;
 public:
     Restaurant();
     ~Restaurant();
-    // most of these functions need to be updated for phase 2
-   void randomSimulate();
-   bool assignToChef(Order* od);    // assign an order to a chef
+    void randomSimulate();
+
+    //Chefs
+    bool assignToChef(Order* od);    // assign an order to a chef
+    bool freeOrderChef(Order* od);   // free the chef of an order
+    
+    
+   //Tables
    bool assignToTable(Order* od);   // assign an order to a table and put the order in inservice list
+   bool freeOrderTable(DineInOrder* dinorder);     // free a table
+   bool RemoveTable(Fit_Tables& t, int  id);     // remove a table from a list
+
+
+   //Scooter
    bool assignToScooter(Order* od); // assign an order to scooter and put the order in inservice list
-   //for cancelling OVCs
+   bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter from an order then send it back or to the res
+   void check_scooters_lists();//done         // check maintscooter and back scooters to the free scooters
+
+
+   //Orders
    bool cancelOrderFromPending(int id);  
    bool cancelOrderFromCooking(int id);
-   bool cancelOrderFromReady(int id);
+   bool cancelOrderFromReady(int id);   
+   bool AddOrderToPending(Order* o);    //add order to a list
 
-   bool freeOrderChef(Order* od);   // free the chef of an order
-   bool freeOrderTable(DineInOrder* dinorder);     // free a table
-   bool freeOrderScooter(DeliveryOrder* deliorder);    // free a scooter
-   
+   void check_cooking_orders(); //done        //move order from cooking to ready
+   void check_ready_orders();  //done        //move oreders from ready to service
+   void check_inservice_orders();//done       // move orders from service to finished
+   void check_overwait_orders();// done        // move the overwait order to the overwait list
+   void AssignPendingToChefs();//done         // move the orders from pending to cooking
 
-   bool RemoveTable(Fit_Tables& t,int  id);
+   //action
+   void check_action_list(); //done
+
+   //COMBO orders
+   bool assignComboToChefs(ComboOrder* combo);    // assign multiple chefs to combo
+   void freeComboChefs(ComboOrder* combo);         // free all chefs of a combo
+   bool assignComboToScooters(ComboOrder* combo);  // assign multiple scooters to combo
+   void freeComboScooters(ComboOrder* combo);       // free all scooters of a combo
 
    // The input file
    bool LoadInputFile(const string& filename);
+   //The output file and statistic
+   bool GenerateOutputFile(const string& filename);
 
-
-
-   void AssignPendingToChefs();
+   void main_simulation();
 };
