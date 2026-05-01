@@ -9,6 +9,7 @@
 #include "UI.h"
 #include<fstream>
 #include<string>
+#include"../entities/ComboOrder.h"
 using namespace std;
 
 class Order;
@@ -63,7 +64,8 @@ private:
     Fit_Tables  busySharable;   //ordered by the least number of seats
     Fit_Tables  busyNoShare;   //doesnt need an order this is just a container (the tables are free when order is done)
     //-------------------------- bonus lists ---------------------------//
-    priQueue<Order*> overwaitOVG;   //order by highest Current time - TQ
+    LinkedQueue<Order*> pendCombo;
+    LinkedQueue<Order*> readyCombo;
 
     int currentTime;        // current time indicator
 
@@ -75,6 +77,7 @@ private:
     int numODG, numODN, numOT, numOVC, numOVG, numOVN;
     int overwaitCount;
     int totalChefBusyTime, totalScooterBusyTime;
+    int numCombo;                    // total number of COMBO orders
 public:
     Restaurant();
     ~Restaurant();
@@ -118,7 +121,11 @@ public:
    //The output file and statistic
    bool GenerateOutputFile(const string& filename);
 
-
+   // -------------------- COMBO  functions --------------------
+   bool assignComboToChefs(Order* od);          // assign multiple chefs to combo
+   bool freeComboChefs(ComboOrder* combo);      // release all combo chefs
+   bool assignComboToScooters(Order* od);       // assign multiple scooters to combo
+   bool freeComboScooters(ComboOrder* combo);   // release all combo scooters
    
    void main_simulation();
 };

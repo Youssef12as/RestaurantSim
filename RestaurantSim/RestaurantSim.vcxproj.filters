@@ -96,6 +96,9 @@
     <ClInclude Include="entities\Scooter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="entities\ComboOrder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp">

@@ -58,9 +58,9 @@ void UI::PrintEndSilent()const
     cout << "Simulation ends, Output file created" << endl;
 }
 
-void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
+void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG, LinkedQueue<Order*>& pCombo,
     LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
-    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait,
+    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait, LinkedQueue<Order*>& rCombo,
     priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
     , Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
@@ -70,6 +70,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
     cout << "--------------     Pending Orders IDs ---------------------- \n";
+    cout << pCombo.GetCount() << " Combo: "; pCombo.print(); cout << "\n\n";
     cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done
     cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n\n";   //done
     cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n\n";    //done
@@ -85,6 +86,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << cookingOrds.GetCount() << " cooking orders: "; cookingOrds.print(); cout << "\n";   //done
 
     cout << "--------------     Ready Orders IDs ---------------------- \n";
+    cout << rCombo.GetCount() << " Combo: "; rCombo.print(); cout << "\n\n";
     cout << rOD.GetCount() << " OD: ";  rOD.print();  cout << "\n\n";     //done
     cout << rOT.GetCount() << " OT: ";  rOT.print();  cout << "\n\n";     //done
     cout << rOV.GetCount() << " OV: "; rOV.print(); cout << "\n\n";    //done
