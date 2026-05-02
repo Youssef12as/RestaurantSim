@@ -66,7 +66,9 @@ private:
     //-------------------------- bonus lists ---------------------------//
     LinkedQueue<Order*> pendCombo;
     LinkedQueue<Order*> readyCombo;
-
+    priQueue<Scooter*> freeRescueScooters;   // available rescue scooters
+    priQueue<Scooter*> rescueBackScooters;   // rescue scooters returning after delivery
+    priQueue<Scooter*> failedBackScooters;   // failed normal scooters returning before maintenance
     int currentTime;        // current time indicator
 
     UI* pUI;                // pointer for the ui class
@@ -78,6 +80,8 @@ private:
     int overwaitCount;
     int totalChefBusyTime, totalScooterBusyTime;
     int numCombo;                    // total number of COMBO orders
+    int Rescue_Count;// for total rescue Scooter
+    int rescueMissionCount;// rescue for failed Scooter
 public:
     Restaurant();
     ~Restaurant();
@@ -128,4 +132,5 @@ public:
    bool freeComboScooters(ComboOrder* combo);   // release all combo scooters
    
    void main_simulation();
+   bool isSimulationFinished() const;
 };

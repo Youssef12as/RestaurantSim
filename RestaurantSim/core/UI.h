@@ -29,7 +29,7 @@ public:
 	void PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG, LinkedQueue<Order*>& pCombo,
 		LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
 		LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait, LinkedQueue<Order*>& rCombo,
-		priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
+		priQueue<Scooter*>& availScooters, priQueue<Scooter*>& rescueScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters, priQueue<Scooter*>& rescueBackScooters, priQueue<Scooter*>& failedBackScooters,int rescueMissions
 		, Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const;
 };
 

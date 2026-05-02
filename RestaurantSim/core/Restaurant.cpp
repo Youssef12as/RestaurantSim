@@ -12,6 +12,9 @@ Restaurant::Restaurant()
     numODG = numODN = numOT = numOVC = numOVG = numOVN = 0;
     overwaitCount = 0;
     totalChefBusyTime = totalScooterBusyTime = 0;
+    numCombo = 0;
+    Rescue_Count = 0;
+    rescueMissionCount = 0;
 }
 
 Restaurant::~Restaurant()
@@ -33,12 +36,12 @@ void Restaurant::main_simulation()
     if (currentMode == ProgramMode::Interactive) {
         pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
             availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
-            freeScooters, maintScooters, backScooters, freeTables, busySharable,
+            freeScooters,freeRescueScooters,maintScooters,backScooters,rescueBackScooters,failedBackScooters,rescueMissionCount,freeTables,busySharable,
             inServOrders, cancelledOrders, finishedOrders);
 
         pUI->WaitForNextStep();
     }
-    while (finishedOrders.GetCount() + cancelledOrders.GetCount() < orderCount) {
+    while (!isSimulationFinished()) {
         
         check_action_list();        // execute the actions in the current time step
 
@@ -57,7 +60,7 @@ void Restaurant::main_simulation()
         if (currentMode == ProgramMode::Interactive) {
             pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
                 availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
-                freeScooters, maintScooters, backScooters, freeTables, busySharable,
+                freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
                 inServOrders, cancelledOrders, finishedOrders);
             pUI->WaitForNextStep();
         }
@@ -65,6 +68,21 @@ void Restaurant::main_simulation()
     }
     GenerateOutputFile(outFile);
     if (currentMode == ProgramMode::Silent) pUI->PrintEndSilent();
+}
+
+bool Restaurant::isSimulationFinished() const
+{
+    //all orders must be either finished or cancelled
+    bool allOrdersDone = finishedOrders.GetCount() + cancelledOrders.GetCount() >= orderCount;
+
+    // Normal scooters should not be returning or in maintenance they should be in freeScooters
+    bool allNormalScootersBack = backScooters.isEmpty() && failedBackScooters.isEmpty() && 
+        maintScooters.isEmpty();
+
+    //Rescue scooters should not be returning
+    bool allRescueScootersBack = rescueBackScooters.isEmpty();
+
+    return allOrdersDone && allNormalScootersBack && allRescueScootersBack;
 }
 
 void Restaurant::randomSimulate()
@@ -188,7 +206,7 @@ void Restaurant::randomSimulate()
 
     pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
         availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
-        freeScooters, maintScooters, backScooters, freeTables, busySharable,
+        freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
         inServOrders, cancelledOrders, finishedOrders);
 
     pUI->WaitForNextStep();
@@ -426,7 +444,7 @@ void Restaurant::randomSimulate()
         //---------------- 3.10 ------------------- //print the current step stats
         pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
             availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
-            freeScooters, maintScooters, backScooters, freeTables, busySharable,
+            freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
             inServOrders, cancelledOrders, finishedOrders);
         currentTime++;
         pUI->WaitForNextStep();
@@ -640,7 +658,34 @@ bool Restaurant::assignToScooter(Order* od)
     if (tempscooter != nullptr) {       // if i got a scooter
         deliv->setAssignedScooter(tempscooter);
         od->setTS(currentTime);
-        inServOrders.enqueue(od, -deliv->getExpectedFinishTime());
+        // reset rescue state
+        deliv->clearFailure();
+        deliv->setDeliveredByRescue(false);
+
+        int tripTime = (int)ceil(deliv->getDistance() / tempscooter->getSpeed());
+        int finishTime = currentTime + tripTime;
+
+        bool fail = (rand() % 100 < 20);// probablity of failure 
+        if (fail && tripTime > 1)
+        {
+            int failureTimeAfterservice = 1 + rand() % (tripTime - 1); // from 1 to to tripTime -1 
+            int failureTime = currentTime + failureTimeAfterservice;
+
+            float FailureDistance = failureTimeAfterservice * tempscooter->getSpeed();
+            
+            if (FailureDistance >= deliv->getDistance())// If failure point reaches or passes the customer,the order finishes normally.
+            {
+                deliv->clearFailure();
+                deliv->setDeliveredByRescue(false);
+                inServOrders.enqueue(deliv, -finishTime);
+            }
+            else
+            {//scooter failed
+                deliv->setFailureDistance(FailureDistance);
+                inServOrders.enqueue(deliv, -failureTime);
+            }
+        }
+        else { inServOrders.enqueue(od, -deliv->getExpectedFinishTime()); }
         return true;
     }
     return false;
@@ -674,7 +719,19 @@ void Restaurant::check_scooters_lists()
         }
         else freeScooters.enqueue(tempscooter, -tempscooter->GetDistance());
     }
-
+    while (failedBackScooters.peek(tempscooter, pri))
+    {
+        if (-pri > currentTime) break;
+        failedBackScooters.dequeue(tempscooter, pri);
+        tempscooter->setTmain(currentTime);
+        maintScooters.enqueue(tempscooter);// must enter maitScooter after failing 
+    }
+    while (rescueBackScooters.peek(tempscooter, pri))
+    {
+        if (-pri > currentTime) break;
+        rescueBackScooters.dequeue(tempscooter, pri);
+        freeRescueScooters.enqueue(tempscooter, -tempscooter->GetDistance()); // Rescue scooter becomes available again
+    }
     tempscooter = nullptr;
     while (maintScooters.peek(tempscooter)) {       //check the maint scooter
         if (tempscooter->getFinishMaint() > currentTime) break;
@@ -799,12 +856,64 @@ void Restaurant::check_inservice_orders()
         //if the order is delivery
         DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(temporder);
         if (deliv != nullptr) {
+            if (deliv->isDeliveredByRescue())
+            {
+                Scooter* rescue = deliv->getAssignedScooter();
+                deliv->setTF(currentTime);
+                if (rescue)
+                {
+                    int rescueReturnTime = (int)ceil(deliv->getDistance() / rescue->getSpeed());
+                    rescue->incDist((int)ceil(deliv->getDistance() * 2));
+                    
+                    rescueBackScooters.enqueue(rescue, -(currentTime + rescueReturnTime));// Rescue scooter is go to backRescueScooters
+
+                    deliv->setAssignedScooter(nullptr);// Remove scooter from order
+                }
+                finishedOrders.push(deliv);
+                continue;
+            }
+            if (deliv->hasFailure())// if  scooter failed.
+            {
+                Scooter* failedScooter = deliv->getAssignedScooter();
+                Scooter* rescue = nullptr;
+                int rescuePri = 0;
+                if (!freeRescueScooters.dequeue(rescue, rescuePri))// if there is no freeRescue wait the next step
+                {
+                    inServOrders.enqueue(deliv, -(currentTime + 1));
+                    continue;
+                }
+                rescueMissionCount++;// Rescue start
+                float failureDistance = deliv->getFailureDistance();
+
+                int rescueTravelTime = (int)ceil(failureDistance / rescue->getSpeed());
+
+                int rescueArrivalTime = currentTime + rescueTravelTime;
+                if (failedScooter)
+                {
+                    int failedReturnTime = (int)ceil(failureDistance / failedScooter->getSpeed());
+                    //from the time of service until waiting for the rescue + return to restaurant
+                    totalScooterBusyTime += (rescueArrivalTime - deliv->getTS()) + failedReturnTime;
+                    failedScooter->incDist((int)ceil(failureDistance * 2));//update the distance 
+                    failedBackScooters.enqueue(failedScooter, -(rescueArrivalTime + failedReturnTime));
+                }
+                deliv->setAssignedScooter(rescue);
+                deliv->setDeliveredByRescue(true);
+                deliv->clearFailure();// remove failue we don't allow to fail again
+                float remainingDistance = deliv->getDistance() - failureDistance;
+                if (remainingDistance < 0) remainingDistance = 0;
+
+                //Rescue scooter completes the remaining distance   
+                int rescueDeliveryTime = (int)ceil(remainingDistance / rescue->getSpeed());
+                int rescueFinishTime = rescueArrivalTime + rescueDeliveryTime;
+
+                inServOrders.enqueue(deliv, -rescueFinishTime);
+                continue;
+            }
             freeOrderScooter(deliv);
             temporder->setTF(currentTime);
             finishedOrders.push(temporder);
             continue;
         }
-
     }
 }
 
@@ -1040,11 +1149,18 @@ bool Restaurant::LoadInputFile(const string& filename)
     for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
     for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
     inputFile >> Scooter_Count >> Scooter_Speed;
+    inputFile >> Rescue_Count;
     inputFile >> Main_Ords >> Main_Dur;
     for (int i = 0; i < Scooter_Count; i++)
     {
         Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
         freeScooters.enqueue(sco,-sco->GetDistance());
+    }
+    int rescueSpeed = Scooter_Speed * 3;// rescue scooters are faster
+    for (int i = 0; i < Rescue_Count; i++)// create rescue scooters
+    {
+        Scooter* rescue = new Scooter(rescueSpeed, Main_Dur);
+        freeRescueScooters.enqueue(rescue, -rescue->GetDistance());
     }
     inputFile >> total_Table;
     int createdTable = 0;
@@ -1166,11 +1282,11 @@ bool Restaurant::GenerateOutputFile(const string& filename)
     outputFile << "\n================ Statistics ================\n\n";
     outputFile << "1- Total number of orders and total number of each order type = "<< orderCount << "\n\tODG = " << numODG<< "\n\tODN = " << numODN<< "\n\tOT  = " << numOT<< "\n\tOVC = " << numOVC<< "\n\tOVG = " << numOVG<< "\n\tOVN = " << numOVN << "\n\tCombo  = " << numCombo << "\n";
     outputFile << "2- Total number of chefs and total number of each type = "<< numChefs << "\n\tCN = " << num_CN<< "\n\tCS = " << num_CS << "\n";
-    outputFile << "3- Total number of scooters = " << Scooter_Count << "\n";
+    outputFile << "3- Total number of scooters and total number of each type  = " << Scooter_Count+Rescue_Count <<"\n\tNormal scooters count = " <<Scooter_Count<< "\n\tRescue scooters count = " << Rescue_Count <<"\n\tRescue missions = " << rescueMissionCount << "\n";
     outputFile << "4- Percentage of finished orders and percentage of cancelled orders"<< "\n\tFinished Orders % = " << finishedPercent<< "%\n\tCancelled Orders % = " << cancelledPercent << "%\n";
     outputFile << "5- Overwait Orders % = " << overwaitPercent << "%\n";
     outputFile << "6- Average for Ti TC Tw Tserv for all finished orders"<< "\n\tAverage Ti = " << avgTi<< "\n\tAverage TC = " << avgTc<< "\n\tAverage Tw = " << avgTw<< "\n\tAverage Tserv = " << avgTserv << "\n";
-    outputFile << "7- Scooters Utilization % = " << scooterUtil << "%\n";
+    outputFile << "7- Scooters Utilization % = " << scooterUtil << "% (Rescue scooters not counted in Utilization)\n";
     outputFile << "8- Chefs Utilization % = " << chefUtil << "%\n";
     outputFile.close();
     return true;
