@@ -144,6 +144,7 @@
     <ClInclude Include="ds\QueueADT.h" />
     <ClInclude Include="ds\StackADT.h" />
     <ClInclude Include="entities\Chef.h" />
+    <ClInclude Include="entities\ComboOrder.h" />
     <ClInclude Include="entities\Order.h" />
     <ClInclude Include="entities\Scooter.h" />
     <ClInclude Include="entities\Table.h" />
