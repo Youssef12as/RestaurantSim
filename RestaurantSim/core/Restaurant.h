@@ -9,6 +9,7 @@
 #include "UI.h"
 #include<fstream>
 #include<string>
+#include"../entities/ComboOrder.h"
 using namespace std;
 
 class Order;
@@ -63,8 +64,11 @@ private:
     Fit_Tables  busySharable;   //ordered by the least number of seats
     Fit_Tables  busyNoShare;   //doesnt need an order this is just a container (the tables are free when order is done)
     //-------------------------- bonus lists ---------------------------//
-    priQueue<Order*> overwaitOVG;   //order by highest Current time - TQ
-
+    LinkedQueue<Order*> pendCombo;
+    LinkedQueue<Order*> readyCombo;
+    priQueue<Scooter*> freeRescueScooters;   // available rescue scooters
+    priQueue<Scooter*> rescueBackScooters;   // rescue scooters returning after delivery
+    priQueue<Scooter*> failedBackScooters;   // failed normal scooters returning before maintenance
     int currentTime;        // current time indicator
 
     UI* pUI;                // pointer for the ui class
@@ -72,6 +76,12 @@ private:
 
     // for statistic // maybe I will add more later 
     int num_CS, num_CN, Scooter_Count, total_Table, Main_Ords, TH, orderCount;
+    int numODG, numODN, numOT, numOVC, numOVG, numOVN;
+    int overwaitCount;
+    int totalChefBusyTime, totalScooterBusyTime;
+    int numCombo;                    // total number of COMBO orders
+    int Rescue_Count;// for total rescue Scooter
+    int rescueMissionCount;// rescue for failed Scooter
 public:
     Restaurant();
     ~Restaurant();
@@ -112,9 +122,15 @@ public:
    
    // The input file
    bool LoadInputFile(const string& filename);
+   //The output file and statistic
+   bool GenerateOutputFile(const string& filename);
 
-
-
+   // -------------------- COMBO  functions --------------------
+   bool assignComboToChefs(Order* od);          // assign multiple chefs to combo
+   bool freeComboChefs(ComboOrder* combo);      // release all combo chefs
+   bool assignComboToScooters(Order* od);       // assign multiple scooters to combo
+   bool freeComboScooters(ComboOrder* combo);   // release all combo scooters
    
    void main_simulation();
+   bool isSimulationFinished() const;
 };

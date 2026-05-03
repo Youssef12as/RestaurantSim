@@ -140,9 +140,13 @@ private:
     float distance;
     Scooter* assignedScooter;
 
+    // Rescue SCooter
+    float failureDistance;//distance from restaurant to the point where the normal scooter failed.
+    bool deliveredByRescue;//false if order is still with normal scooter and true if  rescue scooter is now completing the delivery
 public:
     DeliveryOrder(int id, string type, int TQ, int size, float price, float distance)
-        : Order(id, type, TQ, size, price), distance(distance), assignedScooter(nullptr) {
+        : Order(id, type, TQ, size, price), distance(distance), assignedScooter(nullptr),
+        failureDistance(0.0f), deliveredByRescue(false) {
     }
 
     float getDistance() const { return distance; }
@@ -165,6 +169,14 @@ public:
         }
     }
 
+    void setFailureDistance(float d) { failureDistance = d; }
+    void clearFailure(){failureDistance = 0;}
+
+    bool hasFailure() const{return failureDistance > 0;}
+    float getFailureDistance() const{return failureDistance;}
+
+    void setDeliveredByRescue(bool hasRescue){deliveredByRescue = hasRescue;}
+    bool isDeliveredByRescue() const{return deliveredByRescue;}
 };
 
 class TakeawayOrder : public Order {

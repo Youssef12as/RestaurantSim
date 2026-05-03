@@ -58,11 +58,7 @@ void UI::PrintEndSilent()const
     cout << "Simulation ends, Output file created" << endl;
 }
 
-void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG,
-    LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds,
-    LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait,
-    priQueue<Scooter*>& availScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters
-    , Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
+void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG, LinkedQueue<Order*>& pCombo, LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds, LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait, LinkedQueue<Order*>& rCombo, priQueue<Scooter*>& availScooters, priQueue<Scooter*>& rescueScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters, priQueue<Scooter*>& rescueBackScooters, priQueue<Scooter*>& failedBackScooters, int rescueMissions, Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
     cout << "\nCurrent Timestep: " << timestep << "\n";
 
@@ -70,6 +66,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
 
     cout << "--------------     Pending Orders IDs ---------------------- \n";
+    cout << pCombo.GetCount() << " Combo: "; pCombo.print(); cout << "\n\n";
     cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done
     cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n\n";   //done
     cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n\n";    //done
@@ -85,6 +82,7 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
     cout << cookingOrds.GetCount() << " cooking orders: "; cookingOrds.print(); cout << "\n";   //done
 
     cout << "--------------     Ready Orders IDs ---------------------- \n";
+    cout << rCombo.GetCount() << " Combo: "; rCombo.print(); cout << "\n\n";
     cout << rOD.GetCount() << " OD: ";  rOD.print();  cout << "\n\n";     //done
     cout << rOT.GetCount() << " OT: ";  rOT.print();  cout << "\n\n";     //done
     cout << rOV.GetCount() << " OV: "; rOV.print(); cout << "\n\n";    //done
@@ -109,6 +107,18 @@ void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQu
 
     cout << "--------------    Scooters Back to Restaurant  IDs   ---------------------- \n";
     cout << backScooters.GetCount() << " scooters: "; backScooters.print(); cout << "\n\n";   //done
+
+    cout << "--------------   Available  rescue scooters IDs ----------------------- \n";
+    cout << rescueScooters.GetCount() << " Scooters: "; rescueScooters.print(); cout << "\n\n";
+
+    cout << "--------------   Failed scooters Back to Restaurant IDs ---------------------- \n";
+    cout << failedBackScooters.GetCount() << " failed scooters: "; failedBackScooters.print(); cout << "\n\n";
+
+    cout << "--------------    Rescue scooters Back to Restaurant IDs   ---------------------- \n";
+    cout << rescueBackScooters.GetCount() << " rescue scooters: ";rescueBackScooters.print();cout << "\n\n";
+
+    cout << "--------------   Rescue Missions ---------------------- \n";
+    cout << rescueMissions << " rescue missions so far\n\n";
 
     cout << "--------------   Cancelled Orders IDs   ---------------------- \n";
     cout << canceled.GetCount() << " cancelled: "; canceled.print(); cout << "\n\n";  //done

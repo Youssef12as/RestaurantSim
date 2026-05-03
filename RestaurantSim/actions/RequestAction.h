@@ -33,37 +33,48 @@ private:
 	bool CanShare;
 	float Distance;
 
+	int ChefNeeded;      // Combo : number of chefs needed
+	int ScooterNeeded;   // Combo : number of scooters needed
 public:
 	// after knowing what is the type of the action we will call the proper constructor
 
 	RequestAction(Restaurant* rest, string typ, int tq, int id, int size, float price, int seats, int duration, bool share) :
-		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(seats), Duration(duration), CanShare(share), Distance(0)
+		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(seats), Duration(duration), CanShare(share), Distance(0), ChefNeeded(0), ScooterNeeded(0)
 	{ } // all the parameters needed are got in the construction for the OD orders
 
 	RequestAction(Restaurant* rest, string typ, int tq, int id, int size, float price, float dist) :
-		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(0), Duration(0), CanShare(false), Distance(dist)
+		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(0), Duration(0), CanShare(false), Distance(dist), ChefNeeded(0), ScooterNeeded(0)
 	{ } // all the parameters needed are got in the construction for the OV orders
 	
 	RequestAction(Restaurant* rest, string typ, int tq, int id, int size, float price) :
-		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(0), Duration(0), CanShare(false), Distance(0)
-	{
-	} // all the parameters needed are got in the construction for OT orders
+		Action(rest), TYP(typ), TQ(tq), ID(id), SIZE(size), Price(price), Seats(0), Duration(0), CanShare(false), Distance(0), ChefNeeded(0), ScooterNeeded(0)
+	{ } // all the parameters needed are got in the construction for OT orders
+
+	RequestAction(Restaurant* rest, string typ, int tq, int id, int size, float price, float dist, int chefs, int scooters):
+		Action(rest),TYP(typ),TQ(tq),ID(id),SIZE(size),Price(price),Seats(0),Duration(0),CanShare(false),Distance(dist),ChefNeeded(chefs),ScooterNeeded(scooters)
+	{ } // all the parameters needed are got in the construction for Combo orders
 
 	void Act() {
-		string mainType = TYP.substr(0, 2);
-		Order* newOrder;
-		// first create the new order
-		if (mainType == "OV") { 
-			newOrder = new DeliveryOrder(ID, TYP, TQ, SIZE, Price, Distance);
+		Order* newOrder= nullptr;
+		if (TYP == "Combo")
+		{
+			newOrder = new ComboOrder(ID, TYP, TQ, SIZE, Price, Distance, ChefNeeded, ScooterNeeded);        // Create COMBO order
 		}
-		else if (mainType == "OD") {
+		else
+		{
+			string mainType = TYP.substr(0, 2);
+			// first create the new order
+			if (mainType == "OV") {
+				newOrder = new DeliveryOrder(ID, TYP, TQ, SIZE, Price, Distance);
+			}
+			else if (mainType == "OD") {
 
-			newOrder = new DineInOrder(ID, TYP, TQ, SIZE, Price, Seats, Duration, CanShare);
+				newOrder = new DineInOrder(ID, TYP, TQ, SIZE, Price, Seats, Duration, CanShare);
+			}
+			else {
+				newOrder = new TakeawayOrder(ID, TYP, TQ, SIZE, Price);
+			}
 		}
-		else {
-			newOrder = new TakeawayOrder(ID, TYP, TQ, SIZE, Price);
-		}
-
 		//then add it to the appropiate list in the retaurant
 
 		pRest->AddOrderToPending(newOrder);
