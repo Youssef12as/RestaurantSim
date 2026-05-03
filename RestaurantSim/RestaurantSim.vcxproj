@@ -160,6 +160,7 @@
     <Text Include="input3TableSharing.txt" />
     <Text Include="input4Maintenace.txt" />
     <Text Include="input6Comperhensive.txt" />
+    <Text Include="input7Comperhensive.txt" />
     <Text Include="Test_description.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,7 @@ string UI::ReadInputFileName() const
     string fileName;
     cout << "Enter input file name: ";
     cin >> fileName;
+    fileName = fileName + ".txt";
     return fileName;
 }
 
@@ -39,6 +40,7 @@ string UI::ReadOutputFileName() const
     string fileName;
     cout << "Enter output file name: ";
     cin >> fileName;
+    fileName = fileName + ".txt";
     return fileName;
 }
 
@@ -60,69 +62,151 @@ void UI::PrintEndSilent()const
 
 void UI::PrintCurrentState(int timestep, LinkedQueue<Action*>& actions, LinkedQueue<Order*>& pODG, LinkedQueue<Order*>& pODN, LinkedQueue<Order*>& pOT, LinkedQueue<Order*>& pOVN, derivedQueue& pOVC, priQueue<Order*>& pOVG, LinkedQueue<Order*>& pCombo, LinkedQueue<Chef*>& freeCS, LinkedQueue<Chef*>& freeCN, CookingOrders& cookingOrds, LinkedQueue<Order*>& rOD, LinkedQueue<Order*>& rOT, derivedQueue& rOV, priQueue<Order*>& overWait, LinkedQueue<Order*>& rCombo, priQueue<Scooter*>& availScooters, priQueue<Scooter*>& rescueScooters, LinkedQueue<Scooter*>& maintScooters, priQueue<Scooter*>& backScooters, priQueue<Scooter*>& rescueBackScooters, priQueue<Scooter*>& failedBackScooters, int rescueMissions, Fit_Tables& availTables, Fit_Tables& sharedTables, priQueue<Order*>& inService, LinkedQueue<Order*>& canceled, ArrayStack<Order*>& finished) const
 {
-    cout << "\nCurrent Timestep: " << timestep << "\n";
+    // Palette: navy + steel blue + cyan + white + one red accent
+    const char* RST = "\033[0m";
+    const char* BOLD = "\033[1m";
 
-    cout << "===============   Actions List   ================ \n";   //this is not required for this phase
-    cout << actions.GetCount() << " actions remaining: "; actions.print(); cout << "\n";    //done
+    const char* BLU = "\033[34m";    // navy blue  — borders
+    const char* BBLU = "\033[94m";    // steel blue — section headers
+    const char* CYN = "\033[36m";    // teal cyan  — labels
+    const char* BCYN = "\033[96m";    // bright cyan — counts
+    const char* BWHT = "\033[97m";    // bright white — values
+    const char* DGRY = "\033[90m";    // dark gray  — decorative chars
+    const char* BRED = "\033[91m";    // bright red — danger only
 
-    cout << "--------------     Pending Orders IDs ---------------------- \n";
-    cout << pCombo.GetCount() << " Combo: "; pCombo.print(); cout << "\n\n";
-    cout << pODG.GetCount() << " ODG: "; pODG.print(); cout << "\n\n";   //done
-    cout << pODN.GetCount() << " ODN: "; pODN.print(); cout << "\n\n";   //done
-    cout << pOT.GetCount() << " OT: ";  pOT.print();  cout << "\n\n";    //done
-    cout << pOVN.GetCount() << " OVN: "; pOVN.print(); cout << "\n\n";    //done
-    cout << pOVC.GetCount() << " OVC: "; pOVC.print(); cout << "\n\n";    //done
-    cout << pOVG.GetCount() << " OVG: "; pOVG.print(); cout << "\n\n";    //done
+    const char* BG_BLU = "\033[44m";   // blue bg for banner
 
-    cout << "--------------   Available chefs IDs ----------------------- \n";
-    cout << freeCS.GetCount() << " CS: "; freeCS.print(); cout << "\n\n"; //done
-    cout << freeCN.GetCount() << " CN: "; freeCN.print(); cout << "\n\n"; //done
+    // borders
+    const char* BNR = "+==========================================================+";
+    const char* SEC = "+----------------------------------------------------------+";
 
-    cout << "--------------     Cooking orders [Orders ID, chef ID] ---------------------- \n";
-    cout << cookingOrds.GetCount() << " cooking orders: "; cookingOrds.print(); cout << "\n";   //done
+    auto divider = [&](const char* title) {
+        cout << "\n"
+            << BLU << "  " << SEC << RST << "\n"
+            << BBLU << "  |  " << RST << BOLD << BBLU << title << RST << "\n"
+            << BLU << "  " << SEC << RST << "\n";
+        };
 
-    cout << "--------------     Ready Orders IDs ---------------------- \n";
-    cout << rCombo.GetCount() << " Combo: "; rCombo.print(); cout << "\n\n";
-    cout << rOD.GetCount() << " OD: ";  rOD.print();  cout << "\n\n";     //done
-    cout << rOT.GetCount() << " OT: ";  rOT.print();  cout << "\n\n";     //done
-    cout << rOV.GetCount() << " OV: "; rOV.print(); cout << "\n\n";    //done
+    auto row = [&](const char* label, int count, auto& queue) {
+        cout << DGRY << "  |    " << RST
+            << BOLD << BCYN << count << RST
+            << DGRY << "  |  " << RST
+            << CYN << label << RST
+            << DGRY << "  " << RST
+            << BWHT;
+        queue.print();
+        cout << RST << "\n";
+        };
 
-    cout << "--------------     Ready Overwait Orders IDs ---------------------- \n";
-    cout << overWait.GetCount() << " OV: "; overWait.print(); cout << "\n\n";
-           
-    cout << "--------------   Available scooters IDs ----------------------- \n";
-    cout << availScooters.GetCount() << " Scooters: "; availScooters.print(); cout << "\n\n";     //done
+    // same as row but red count — for danger sections
+    auto rowRed = [&](const char* label, int count, auto& queue) {
+        cout << DGRY << "  |    " << RST
+            << BOLD << BRED << count << RST
+            << DGRY << "  |  " << RST
+            << CYN << label << RST
+            << DGRY << "  " << RST
+            << BWHT;
+        queue.print();
+        cout << RST << "\n";
+        };
 
-    cout << "--------------   Available tables [ID, capacity, free seats] ----------------------- \n";
-    cout << availTables.GetCount() << " tables: "; availTables.print(); cout << "\n\n";   //done
+    auto close = [&]() {
+        cout << BLU << "  " << SEC << RST << "\n";
+        };
 
-    cout << "--------------   Available shared tables [ID, capacity, free seats] ----------------------- \n";
-    cout << sharedTables.GetCount() << " tables: "; sharedTables.print(); cout << "\n\n";   //done
+    // ── Banner ─────────────────────────────────────────────────────
+    cout << "\n";
+    cout << BOLD << BBLU << "  " << BNR << RST << "\n";
+    cout << BBLU << "  |" << RST
+        << BG_BLU << BOLD << BWHT
+        << "     RESTAURANT SIMULATOR"
+        << "     TIMESTEP: " << timestep
+        << "     "
+        << RST << BBLU << "|" << RST << "\n";
+    cout << BOLD << BBLU << "  " << BNR << RST << "\n";
 
-    cout << "--------------   In-Service orders [order ID, scooter/Table ID]  ------------------------\n";
-    cout << inService.GetCount() << " Orders: "; inService.printInservice(); cout << "\n\n";   // done this has a specific print function in the priqueue class
+    // 1. Actions
+    divider("Actions List");
+    row("Actions remaining", actions.GetCount(), actions);
+    close();
 
-    cout << "--------------   In-maintainance scooters IDs   ---------------------- \n";
-    cout << maintScooters.GetCount() << " scooters: "; maintScooters.print(); cout << "\n\n"; //done
+    // 2. Pending Orders
+    divider("Pending Orders");
+    row("Combo  ", pCombo.GetCount(), pCombo);
+    row("ODG    ", pODG.GetCount(), pODG);
+    row("ODN    ", pODN.GetCount(), pODN);
+    row("OT     ", pOT.GetCount(), pOT);
+    row("OVN    ", pOVN.GetCount(), pOVN);
+    row("OVC    ", pOVC.GetCount(), pOVC);
+    row("OVG    ", pOVG.GetCount(), pOVG);
+    close();
 
-    cout << "--------------    Scooters Back to Restaurant  IDs   ---------------------- \n";
-    cout << backScooters.GetCount() << " scooters: "; backScooters.print(); cout << "\n\n";   //done
+    // 3. Available Chefs
+    divider("Available Chefs");
+    row("CS  (senior)", freeCS.GetCount(), freeCS);
+    row("CN  (normal)", freeCN.GetCount(), freeCN);
+    close();
 
-    cout << "--------------   Available  rescue scooters IDs ----------------------- \n";
-    cout << rescueScooters.GetCount() << " Scooters: "; rescueScooters.print(); cout << "\n\n";
+    // 4. Cooking Orders
+    divider("Cooking Orders  [Order ID, Chef ID]");
+    cout << DGRY << "  |    " << RST
+        << BOLD << BCYN << cookingOrds.GetCount() << RST
+        << DGRY << "  |  " << RST
+        << CYN << "Cooking" << RST
+        << DGRY << "  " << RST << BWHT;
+    cookingOrds.print();
+    cout << RST << "\n";
+    close();
 
-    cout << "--------------   Failed scooters Back to Restaurant IDs ---------------------- \n";
-    cout << failedBackScooters.GetCount() << " failed scooters: "; failedBackScooters.print(); cout << "\n\n";
+    // 5. Ready Orders
+    divider("Ready Orders");
+    row("Combo", rCombo.GetCount(), rCombo);
+    row("OD   ", rOD.GetCount(), rOD);
+    row("OT   ", rOT.GetCount(), rOT);
+    row("OV   ", rOV.GetCount(), rOV);
+    close();
 
-    cout << "--------------    Rescue scooters Back to Restaurant IDs   ---------------------- \n";
-    cout << rescueBackScooters.GetCount() << " rescue scooters: ";rescueBackScooters.print();cout << "\n\n";
+    // 6. Overwait — danger accent
+    divider("Ready Overwait Orders");
+    rowRed("OV  (overwait)", overWait.GetCount(), overWait);
+    close();
 
-    cout << "--------------   Rescue Missions ---------------------- \n";
-    cout << rescueMissions << " rescue missions so far\n\n";
+    // 7. Scooters
+    divider("Scooters");
+    row("Available       ", availScooters.GetCount(), availScooters);
+    row("Rescue          ", rescueScooters.GetCount(), rescueScooters);
+    row("Maintenance     ", maintScooters.GetCount(), maintScooters);
+    row("Back to rest.   ", backScooters.GetCount(), backScooters);
+    row("Rescue back     ", rescueBackScooters.GetCount(), rescueBackScooters);
+    rowRed("Failed back     ", failedBackScooters.GetCount(), failedBackScooters);
+    cout << DGRY << "  |    " << RST
+        << BOLD << BCYN << rescueMissions << RST
+        << DGRY << "  |  " << RST
+        << CYN << "Rescue missions so far" << RST << "\n";
+    close();
 
-    cout << "--------------   Cancelled Orders IDs   ---------------------- \n";
-    cout << canceled.GetCount() << " cancelled: "; canceled.print(); cout << "\n\n";  //done
+    // 8. Tables
+    divider("Tables  [ID, capacity, free seats]");
+    row("Available tables", availTables.GetCount(), availTables);
+    row("Shared tables   ", sharedTables.GetCount(), sharedTables);
+    close();
 
-    cout << "--------------   Finished orders IDs---------------------------- \n";
-    cout << finished.GetCount() << " Orders: "; finished.print(); cout << "\n\n";     //done
+    // 9. In-Service
+    divider("In-Service Orders  [Order ID, Scooter/Table ID]");
+    cout << DGRY << "  |    " << RST
+        << BOLD << BCYN << inService.GetCount() << RST
+        << DGRY << "  |  " << RST
+        << CYN << "In service" << RST
+        << DGRY << "  " << RST << BWHT;
+    inService.printInservice();
+    cout << RST << "\n";
+    close();
+
+    // 10. Cancelled & Finished
+    divider("Cancelled & Finished Orders");
+    rowRed("Cancelled", canceled.GetCount(), canceled);
+    row("Finished ", finished.GetCount(), finished);
+    close();
+
+    cout << "\n";
 }

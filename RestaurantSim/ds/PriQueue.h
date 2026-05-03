@@ -92,7 +92,7 @@ public:
                 if (deliv != nullptr) {
                     cout << "S" << deliv->getAssignedScooter()->getID();
                 }
-                cout << "]";
+                cout << "], ";
                 ptr = ptr->getNext();
             }
         }

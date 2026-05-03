@@ -27,25 +27,23 @@ void Restaurant::main_simulation()
 {
     string inFile = pUI->ReadInputFileName();   // get input file
     //load input file
-    if (!LoadInputFile(inFile))
+    while (!LoadInputFile(inFile))
     {
         cout << "Error: input file not found or cannot be opened.\n";
-        return;
+        pUI->ReadInputFileName();
     }
     string outFile = pUI->ReadOutputFileName(); // get output file
     ProgramMode currentMode = pUI->ReadMode();   //get mode
     if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
 
-    
-    cout << "orders:" << orderCount << endl;
     if (currentMode == ProgramMode::Interactive) {
         pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
             availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
             freeScooters,freeRescueScooters,maintScooters,backScooters,rescueBackScooters,failedBackScooters,rescueMissionCount,freeTables,busySharable,
             inServOrders, cancelledOrders, finishedOrders);
-
-        pUI->WaitForNextStep();
     }
+    cin.get();
+    pUI->WaitForNextStep();
     while (!isSimulationFinished()) {
         
         check_action_list();        // execute the actions in the current time step
@@ -1239,64 +1237,142 @@ bool Restaurant::LoadInputFile(const string& filename)
 bool Restaurant::GenerateOutputFile(const string& filename)
 {
     ofstream outputFile(filename);
-    if (!outputFile.is_open())  return false;
+    if (!outputFile.is_open()) return false;
 
-    // These sums are used to calculate averages for finished orders
     double sumTi = 0, sumTc = 0, sumTw = 0, sumTserv = 0;
 
-    // Required output header for each finished order
-    outputFile << "TF \tID \tTQ \tTA \tTR \tTS \tTi \tTC \tTw \tTserv\n";
+    // ── helper: pad a number into a fixed-width string ─────────────
+    // No iomanip needed — just use to_string + spaces
+    auto pad = [](int v, int w) -> string {
+        string s = to_string(v);
+        while ((int)s.size() < w) s += " ";
+        return s;
+        };
+    auto padd = [](double v, int w) -> string {
+        // two decimal places manually
+        int whole = (int)v;
+        int frac = (int)((v - whole) * 100 + 0.5);
+        string s = to_string(whole) + "." + (frac < 10 ? "0" : "") + to_string(frac);
+        while ((int)s.size() < w) s += " ";
+        return s;
+        };
 
-    ArrayStack<Order*> tempFinish;    // Temporary stack to restore finishedOrders
+    // ================================================================
+    //  ORDER LOG
+    // ================================================================
+    outputFile << "================================================================\n";
+    outputFile << "                    RESTAURANT SIMULATOR                       \n";
+    outputFile << "                        ORDER LOG                              \n";
+    outputFile << "================================================================\n\n";
+    outputFile << "TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv\n";
+    outputFile << "----------------------------------------------------------------\n";
+
+    ArrayStack<Order*> tempFinish;
     Order* o = nullptr;
     while (finishedOrders.pop(o))
     {
-        outputFile << o->getTF() << "\t"<< o->getID() << "\t"<< o->getTQ() << "\t"<< o->getTA() << "\t"<< o->getTR() << "\t" << o->getTS() << "\t"<< o->getTi() << "\t"<< o->getTc() << "\t"<< o->getTw() << "\t"<< o->getTserv() << "\n";
+        outputFile << pad(o->getTF(), 6) << pad(o->getID(), 6) << pad(o->getTQ(), 6)
+            << pad(o->getTA(), 6) << pad(o->getTR(), 6) << pad(o->getTS(), 6)
+            << pad(o->getTi(), 6) << pad(o->getTc(), 6) << pad(o->getTw(), 6)
+            << pad(o->getTserv(), 6) << "\n";
 
-        // The checks are only safety checks.In a correct finished order, these values should never be -1
-        if (o->getTi() != -1)    sumTi += o->getTi();
-        if (o->getTc() != -1)    sumTc += o->getTc();
-        if (o->getTw() != -1)    sumTw += o->getTw();
+        if (o->getTi() != -1) sumTi += o->getTi();
+        if (o->getTc() != -1) sumTc += o->getTc();
+        if (o->getTw() != -1) sumTw += o->getTw();
         if (o->getTserv() != -1) sumTserv += o->getTserv();
 
         tempFinish.push(o);
     }
-    while (tempFinish.pop(o))   finishedOrders.push(o); // Restore finishedOrders exactly as it was
+    while (tempFinish.pop(o)) finishedOrders.push(o);
+    outputFile << "----------------------------------------------------------------\n\n";
 
-    int fi = finishedOrders.GetCount();// Number of finished orders
-    // Averages for all finished orders. // If fi == 0, keep averages as 0 to avoid division by zero.
+    // ── derived values ─────────────────────────────────────────────
+    int    fi = finishedOrders.GetCount();
     double avgTi = fi ? sumTi / fi : 0.0;
     double avgTc = fi ? sumTc / fi : 0.0;
     double avgTw = fi ? sumTw / fi : 0.0;
     double avgTserv = fi ? sumTserv / fi : 0.0;
 
-    // Percentages// If orderCount  == 0, keep percentages as 0 to avoid division by zero.
     double finishedPercent = orderCount ? (fi * 100.0) / orderCount : 0.0;
     double cancelledPercent = orderCount ? (cancelledOrders.GetCount() * 100.0) / orderCount : 0.0;
     double overwaitPercent = orderCount ? (overwaitCount * 100.0) / orderCount : 0.0;
 
-    int simTime = currentTime - 1;// Simulation time.
-
-    // Chef utilization:
-    int numChefs = num_CN + num_CS;
+    int    simTime = currentTime - 1;
+    int    numChefs = num_CN + num_CS;
     double chefUtil = (simTime > 0 && numChefs > 0) ? (100.0 * totalChefBusyTime) / (simTime * numChefs) : 0.0;
+    double scooterUtil = (simTime > 0 && Scooter_Count > 0) ? (100.0 * totalScooterBusyTime) / (simTime * Scooter_Count) : 0.0;
 
-    // Scooter utilization:
-    double scooterUtil = (simTime > 0 && Scooter_Count > 0) ? (100.0 * totalScooterBusyTime) / (simTime * Scooter_Count): 0.0;
+    // ================================================================
+    //  STATISTICS
+    // ================================================================
+    outputFile << "================================================================\n";
+    outputFile << "                        STATISTICS                             \n";
+    outputFile << "================================================================\n\n";
 
-    outputFile << "\n================ Statistics ================\n\n";
-    outputFile << "1- Total number of orders and total number of each order type = "<< orderCount << "\n\tODG = " << numODG<< "\n\tODN = " << numODN<< "\n\tOT  = " << numOT<< "\n\tOVC = " << numOVC<< "\n\tOVG = " << numOVG<< "\n\tOVN = " << numOVN << "\n\tCombo  = " << numCombo << "\n";
-    outputFile << "2- Total number of chefs and total number of each type = "<< numChefs << "\n\tCN = " << num_CN<< "\n\tCS = " << num_CS << "\n";
-    outputFile << "3- Total number of scooters and total number of each type  = " << Scooter_Count+Rescue_Count <<"\n\tNormal scooters count = " <<Scooter_Count<< "\n\tRescue scooters count = " << Rescue_Count <<"\n\tRescue missions = " << rescueMissionCount << "\n";
-    outputFile << "4- Percentage of finished orders and percentage of cancelled orders"<< "\n\tFinished Orders % = " << finishedPercent<< "%\n\tCancelled Orders % = " << cancelledPercent << "%\n";
-    outputFile << "5- Overwait Orders % = " << overwaitPercent << "%\n";
-    outputFile << "6- Average for Ti TC Tw Tserv for all finished orders"<< "\n\tAverage Ti = " << avgTi<< "\n\tAverage TC = " << avgTc<< "\n\tAverage Tw = " << avgTw<< "\n\tAverage Tserv = " << avgTserv << "\n";
-    outputFile << "7- Scooters Utilization % = " << scooterUtil << "% (Rescue scooters not counted in Utilization)\n";
-    outputFile << "8- Chefs Utilization % = " << chefUtil << "%\n";
+    outputFile << "  [1] Order Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Orders          | " << pad(orderCount, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Dine-in Grilled (ODG) | " << pad(numODG, 5) << " |\n";
+    outputFile << "      | Dine-in Normal  (ODN) | " << pad(numODN, 5) << " |\n";
+    outputFile << "      | Takeaway        (OT)  | " << pad(numOT, 5) << " |\n";
+    outputFile << "      | Delivery Cold   (OVC) | " << pad(numOVC, 5) << " |\n";
+    outputFile << "      | Delivery Grilled(OVG) | " << pad(numOVG, 5) << " |\n";
+    outputFile << "      | Delivery Normal (OVN) | " << pad(numOVN, 5) << " |\n";
+    outputFile << "      | Combo                 | " << pad(numCombo, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [2] Chef Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Chefs           | " << pad(numChefs, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Normal Chefs    (CN)  | " << pad(num_CN, 5) << " |\n";
+    outputFile << "      | Special Chefs   (CS)  | " << pad(num_CS, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [3] Scooter Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Scooters        | " << pad(Scooter_Count + Rescue_Count, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Normal Scooters       | " << pad(Scooter_Count, 5) << " |\n";
+    outputFile << "      | Rescue Scooters       | " << pad(Rescue_Count, 5) << " |\n";
+    outputFile << "      | Rescue Missions       | " << pad(rescueMissionCount, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [4] Order Outcomes\n";
+    outputFile << "      +-----------------------+--------+\n";
+    outputFile << "      | Finished Orders %     | " << padd(finishedPercent, 5) << "% |\n";
+    outputFile << "      | Cancelled Orders %    | " << padd(cancelledPercent, 5) << "% |\n";
+    outputFile << "      | Overwait Orders %     | " << padd(overwaitPercent, 5) << "% |\n";
+    outputFile << "      +-----------------------+--------+\n\n";
+
+    outputFile << "  [5] Averages  (finished orders)\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Avg Ti                | " << padd(avgTi, 5) << " |\n";
+    outputFile << "      | Avg TC                | " << padd(avgTc, 5) << " |\n";
+    outputFile << "      | Avg Tw                | " << padd(avgTw, 5) << " |\n";
+    outputFile << "      | Avg Tserv             | " << padd(avgTserv, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [6] Utilization\n";
+    outputFile << "      +-----------------------+--------+\n";
+    outputFile << "      | Chefs Util %          | " << padd(chefUtil, 5) << "% |\n";
+    outputFile << "      | Scooters Util %       | " << padd(scooterUtil, 5) << "% |\n";
+    outputFile << "      | (rescue scooters excluded)     |\n";
+    outputFile << "      +-----------------------+--------+\n\n";
+
+    outputFile << "================================================================\n";
+
     outputFile.close();
     return true;
 }
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
 
+//----------------------------------------------------------------------------------//
+//------------------------- Combo Functions ----------------------------------------//
+//----------------------------------------------------------------------------------//
 bool Restaurant::assignComboToChefs(Order* od)
 {
     ComboOrder* combo = dynamic_cast<ComboOrder*>(od);
@@ -1383,3 +1459,6 @@ bool Restaurant::freeComboScooters(ComboOrder* combo)
     }
     return true;
 }
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
