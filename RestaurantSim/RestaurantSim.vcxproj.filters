@@ -72,9 +72,6 @@
     <ClInclude Include="DEFS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PriorityParameters.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="core\UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -107,5 +104,16 @@
     <ClCompile Include="core\UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="input1Cancellation.txt" />
+    <Text Include="input2RescueScooters.txt" />
+    <Text Include="input3TableSharing.txt" />
+    <Text Include="input4Maintenace.txt" />
+    <Text Include="input6Comperhensive.txt" />
+    <Text Include="Test_description.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="input5Cancellation.txt" />
   </ItemGroup>
 </Project>

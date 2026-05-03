@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "Scooter.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ public:
         TA(-1), TR(-1), TS(-1), TF(-1), assignedChef(nullptr) {
     }
 
-    virtual ~Order() {}
+    virtual ~Order() = default;
 
     int getID() const { return id; }
     string getType() const { return type; }
@@ -81,7 +82,7 @@ public:
         }
     }
 
-    int getExpectedFinishTime(float chefSpeed) const {
+    int getExpectedReadyTime(float chefSpeed) const {
         if (TA == -1) {
             return -1;
         }
@@ -89,6 +90,8 @@ public:
             return TA + (int)ceil((float)size / chefSpeed);
         }
     }
+
+    virtual int getExpectedFinishTime() const { return -1; }
 
     virtual void print() const {
         cout << id;
@@ -120,6 +123,16 @@ public:
     Table* getAssignedTable() const { return assignedTable; }
     void setAssignedTable(Table* t) { assignedTable = t; }
 
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        else {
+            return TS + duration;
+        }
+    }
+
+
 };
 
 class DeliveryOrder : public Order {
@@ -127,9 +140,13 @@ private:
     float distance;
     Scooter* assignedScooter;
 
+    // Rescue SCooter
+    float failureDistance;//distance from restaurant to the point where the normal scooter failed.
+    bool deliveredByRescue;//false if order is still with normal scooter and true if  rescue scooter is now completing the delivery
 public:
     DeliveryOrder(int id, string type, int TQ, int size, float price, float distance)
-        : Order(id, type, TQ, size, price), distance(distance), assignedScooter(nullptr) {
+        : Order(id, type, TQ, size, price), distance(distance), assignedScooter(nullptr),
+        failureDistance(0.0f), deliveredByRescue(false) {
     }
 
     float getDistance() const { return distance; }
@@ -140,6 +157,26 @@ public:
         return w1 * price + w2 * size - w3 * distance;
     }
 
+    int getExpectedFinishTime() const {
+        if (TS == -1) {
+            return -1;
+        }
+        if (assignedScooter == nullptr) {
+            return -1;
+        }
+        else {
+            return TS + ceil(distance / assignedScooter->getSpeed());
+        }
+    }
+
+    void setFailureDistance(float d) { failureDistance = d; }
+    void clearFailure(){failureDistance = 0;}
+
+    bool hasFailure() const{return failureDistance > 0;}
+    float getFailureDistance() const{return failureDistance;}
+
+    void setDeliveredByRescue(bool hasRescue){deliveredByRescue = hasRescue;}
+    bool isDeliveredByRescue() const{return deliveredByRescue;}
 };
 
 class TakeawayOrder : public Order {

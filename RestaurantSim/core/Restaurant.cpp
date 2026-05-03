@@ -2,16 +2,90 @@
 #include <cstdlib>   // rand, srand
 #include <ctime>     // time
 #include <random>
-
+#include"../actions/RequestAction.h"
+#include"../actions/CancelAction.h"
 Restaurant::Restaurant()
 {
 	pUI = new UI;
     currentTime = 1;
+    num_CS = num_CN = Scooter_Count = total_Table = Main_Ords = TH = orderCount = 0;
+    numODG = numODN = numOT = numOVC = numOVG = numOVN = 0;
+    overwaitCount = 0;
+    totalChefBusyTime = totalScooterBusyTime = 0;
+    numCombo = 0;
+    Rescue_Count = 0;
+    rescueMissionCount = 0;
 }
 
 Restaurant::~Restaurant()
 {
 	delete pUI;
+}
+
+
+void Restaurant::main_simulation()
+{
+    string inFile = pUI->ReadInputFileName();   // get input file
+    //load input file
+    while (!LoadInputFile(inFile))
+    {
+        cout << "Error: input file not found or cannot be opened.\n";
+        pUI->ReadInputFileName();
+    }
+    string outFile = pUI->ReadOutputFileName(); // get output file
+    ProgramMode currentMode = pUI->ReadMode();   //get mode
+    if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
+
+    if (currentMode == ProgramMode::Interactive) {
+        pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
+            availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
+            freeScooters,freeRescueScooters,maintScooters,backScooters,rescueBackScooters,failedBackScooters,rescueMissionCount,freeTables,busySharable,
+            inServOrders, cancelledOrders, finishedOrders);
+    }
+    cin.get();
+    pUI->WaitForNextStep();
+    while (!isSimulationFinished()) {
+        
+        check_action_list();        // execute the actions in the current time step
+
+        check_inservice_orders();    // finish the orders in the inservice to free tables and scooters
+
+        check_scooters_lists();      // recover the the back scooters
+
+        check_cooking_orders();      // get the cooking orders ready to free up chefs
+
+        check_overwait_orders();    // check the over wait orders
+
+        check_ready_orders();        // get the ready order to inservice
+
+        AssignPendingToChefs();     //assign pending orders to the chefs
+
+        if (currentMode == ProgramMode::Interactive) {
+            pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
+                availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
+                freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
+                inServOrders, cancelledOrders, finishedOrders);
+            pUI->WaitForNextStep();
+        }
+        currentTime++;
+    }
+    GenerateOutputFile(outFile);
+    if (currentMode == ProgramMode::Silent) pUI->PrintEndSilent();
+}
+
+bool Restaurant::isSimulationFinished() const
+{
+    //all orders must be either finished or cancelled
+    bool allOrdersDone = finishedOrders.GetCount() + cancelledOrders.GetCount() >= orderCount;
+
+    // Normal scooters should not be returning or in maintenance they should be in freeScooters
+    bool allNormalScootersBack = backScooters.isEmpty() && failedBackScooters.isEmpty() && 
+        maintScooters.isEmpty();
+
+    //Rescue scooters should not be returning
+    bool allRescueScootersBack = rescueBackScooters.isEmpty();
+
+    return allOrdersDone && allNormalScootersBack && allRescueScootersBack;
 }
 
 void Restaurant::randomSimulate()
@@ -49,7 +123,7 @@ void Restaurant::randomSimulate()
 
         case 1: // Dine-In Normal
         {
-            int seats = rand() % 5 + 1;
+            int seats = rand() % 5 +1;
             int duration = rand() % 120 + 10;
             bool share = rand() % 2;
 
@@ -133,9 +207,10 @@ void Restaurant::randomSimulate()
         freeTables.enqueue(temptable, -temptable->GetFreeSeats());
     }
 
-    pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,
-        availCS, availCN, cooking, readyOD, readyOT, readyOV,
-        freeScooters, maintScooters, backScooters, freeTables, busySharable, inServOrders, cancelledOrders, finishedOrders);
+    pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
+        availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
+        freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
+        inServOrders, cancelledOrders, finishedOrders);
 
     pUI->WaitForNextStep();
     //-------------------------while there are processing orders------------
@@ -332,7 +407,7 @@ void Restaurant::randomSimulate()
                 }
                 else {      //if not then it is delivery free its scooter
                     DeliveryOrder* deliv = (DeliveryOrder*)servedorder;
-                    freeOrderScooter(deliv);
+                    freeOrderScooter(deliv);        //return the scooter to back_scooters
                 }
             }
         }
@@ -369,20 +444,19 @@ void Restaurant::randomSimulate()
         }
         
 
-        //---------------- 3.10 -------------------
-        pUI->PrintCurrentState(currentTime, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG,   //print the current step stats
-            availCS, availCN, cooking, readyOD, readyOT, readyOV,
-            freeScooters, maintScooters, backScooters, freeTables, busySharable, inServOrders, cancelledOrders, finishedOrders);
+        //---------------- 3.10 ------------------- //print the current step stats
+        pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
+            availCS, availCN, cooking, readyOD, readyOT, readyOV, overWaitOVG, readyCombo,
+            freeScooters, freeRescueScooters, maintScooters, backScooters, rescueBackScooters, failedBackScooters, rescueMissionCount, freeTables, busySharable,
+            inServOrders, cancelledOrders, finishedOrders);
         currentTime++;
         pUI->WaitForNextStep();
     }
 }
 
 //----------------------------------------------------------------------------------//
-//------------------------- Main functions -----------------------------------------//
+//------------------------- Chefs functions -----------------------------------------//
 //----------------------------------------------------------------------------------//
-
-
 bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
 {
     // if the order is dinein
@@ -407,7 +481,10 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             dinein->setAssignedChef(tempChef);
         }
-        if(assigned) cooking.enqueue(od, -od->getExpectedFinishTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+        if (assigned) {
+            od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed())); // put the order in the cooking list
+        }
         return assigned;
     }
 
@@ -439,7 +516,11 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
             }
             deliv->setAssignedChef(tempChef);
         }
-        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
+        if (assigned) {
+            od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
+        }
+
         return assigned;
     }
 
@@ -455,34 +536,122 @@ bool Restaurant::assignToChef(Order* od)   // need to update the chefs busy time
         }
         take->setAssignedChef(tempChef);
 
-        if (assigned) cooking.enqueue(od, -(od->getAssignedChef()->getSpeed()));
+        if (assigned) {
+            od->setTA(currentTime);
+            cooking.enqueue(od, -od->getExpectedReadyTime(od->getAssignedChef()->getSpeed()));
+        }
+
         return assigned;
     }
 
     return false;
 }
 
-bool Restaurant::assignToTable(Order* od)
-{
-    DineInOrder* dinein = (DineInOrder*)od;
-    Table* temptable = busySharable.GetBest(dinein->getSeats());
-    if (temptable == nullptr) {
-        temptable = freeTables.GetBest(dinein->getSeats());
-    }
-    if (temptable != nullptr) {     // if i got a table
-        dinein->setAssignedTable(temptable);    // assign it
-        temptable->setBusySeats(dinein->getSeats()); // update free seats
-        if (temptable->GetFreeSeats() > 0) {        // put it in the proper list
-            busySharable.enqueue(temptable, -temptable->GetFreeSeats());
-        }
-        else busyNoShare.enqueue(temptable);
 
-        inServOrders.enqueue(od, -dinein->getDuration());   // move the order to inservice
+bool Restaurant::freeOrderChef(Order* od)
+{
+    if (od->getAssignedChef() != nullptr) {
+        // Accumulate chef busy time.
+        if (od->getTA() != -1 && od->getTR() != -1) totalChefBusyTime += od->getTR() - od->getTA();
+        Chef* tempchef = od->getAssignedChef();
+        tempchef->releaseOrder();
+        if (tempchef->getType() == "CS") {
+            availCS.enqueue(tempchef);
+        }
+        else {
+            availCN.enqueue(tempchef);
+        }
+        od->setAssignedChef(nullptr);
         return true;
     }
     return false;
 }
 
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+
+
+//----------------------------------------------------------------------------------//
+//------------------------- Tables functions ---------------------------------------//
+//----------------------------------------------------------------------------------//
+bool Restaurant::assignToTable(Order* od)
+{
+    DineInOrder* dinein = (DineInOrder*)od;
+    if (!dinein)     return false;
+    Table* temptable = nullptr;
+    if (dinein->getCanShare()== true)    
+    {
+        temptable = busySharable.GetBest(dinein->getSeats());// confirm if the it allow sharing
+        if (temptable) RemoveTable(busySharable, temptable->GetId()); //if we found in busysharable remove it 
+    }
+    if (temptable == nullptr) {
+        temptable = freeTables.GetBest(dinein->getSeats());
+        if (temptable) RemoveTable(freeTables, temptable->GetId());
+    }
+    if (temptable != nullptr) {     // if i got a table
+        dinein->setAssignedTable(temptable);    // assign it
+        temptable->setBusySeats(dinein->getSeats()); // update free seats
+        if (temptable->GetFreeSeats() > 0 && dinein->getCanShare()==true) {        // put it in the proper list
+            busySharable.enqueue(temptable, -temptable->GetFreeSeats());// if there is some empty seat and the customer can share
+        }
+        else busyNoShare.enqueue(temptable,-temptable->GetFreeSeats());//if it is completely full or  the customer refused to share
+
+        od->setTS(currentTime); // update the TS
+        inServOrders.enqueue(od, -dinein->getExpectedFinishTime());   // move the order to inservice
+        return true;
+    }
+    return false;
+}
+
+bool Restaurant::freeOrderTable(DineInOrder* dinorder)
+{
+    Table* temptable = dinorder->getAssignedTable();    // get the order table
+    if (temptable) {// the table is possible in either busySharable or busyNoshare so remove it in both
+        RemoveTable(busySharable, temptable->GetId());
+        RemoveTable(busyNoShare, temptable->GetId());
+        temptable->freeSeats(dinorder->getSeats());
+        dinorder->setAssignedTable(nullptr);
+        if (temptable->getBusySeats() == 0) {           // place it in the right list
+            freeTables.enqueue(temptable, -temptable->GetFreeSeats());
+        }
+        else {
+            busySharable.enqueue(temptable, -temptable->GetFreeSeats());
+        }
+        dinorder->setAssignedTable(nullptr);
+        return true;
+    }
+    return false;
+}
+
+bool Restaurant::RemoveTable(Fit_Tables& t, int id)
+{
+    Table* tempTable;
+    int pri;
+    Fit_Tables temp;
+    bool found = false;
+    while (t.dequeue(tempTable, pri))
+    {
+        if (!found && tempTable->GetId() == id)
+        {
+            found = true;
+            continue;
+        }
+        temp.enqueue(tempTable, pri);
+    }
+    while (temp.dequeue(tempTable, pri)) t.enqueue(tempTable, pri);
+    return found;
+}
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+
+
+//----------------------------------------------------------------------------------//
+//------------------------- Scooters functions -------------------------------------//
+//----------------------------------------------------------------------------------//
 bool Restaurant::assignToScooter(Order* od)
 {
     DeliveryOrder* deliv = (DeliveryOrder*)od;
@@ -491,13 +660,98 @@ bool Restaurant::assignToScooter(Order* od)
     freeScooters.dequeue(tempscooter, pri);
     if (tempscooter != nullptr) {       // if i got a scooter
         deliv->setAssignedScooter(tempscooter);
-        int pri = deliv->getDistance() / deliv->getAssignedScooter()->getSpeed();
-        inServOrders.enqueue(od, -pri);
+        od->setTS(currentTime);
+        // reset rescue state
+        deliv->clearFailure();
+        deliv->setDeliveredByRescue(false);
+
+        int tripTime = (int)ceil(deliv->getDistance() / tempscooter->getSpeed());
+        int finishTime = currentTime + tripTime;
+
+        bool fail = (rand() % 100 < 20);// probablity of failure 
+        if (fail && tripTime > 1)
+        {
+            int failureTimeAfterservice = 1 + rand() % (tripTime - 1); // from 1 to to tripTime -1 
+            int failureTime = currentTime + failureTimeAfterservice;
+
+            float FailureDistance = failureTimeAfterservice * tempscooter->getSpeed();
+            
+            if (FailureDistance >= deliv->getDistance())// If failure point reaches or passes the customer,the order finishes normally.
+            {
+                deliv->clearFailure();
+                deliv->setDeliveredByRescue(false);
+                inServOrders.enqueue(deliv, -finishTime);
+            }
+            else
+            {//scooter failed
+                deliv->setFailureDistance(FailureDistance);
+                inServOrders.enqueue(deliv, -failureTime);
+            }
+        }
+        else { inServOrders.enqueue(od, -deliv->getExpectedFinishTime()); }
         return true;
     }
     return false;
 }
 
+bool Restaurant::freeOrderScooter(DeliveryOrder* deliorder) // this is called before the check scooters
+{
+    Scooter* tempscooter = deliorder->getAssignedScooter();     // get the order scooter
+    if (tempscooter) {
+        int tripTime = (int)ceil(deliorder->getDistance() / tempscooter->getSpeed());// Time needed to reach customer
+        totalScooterBusyTime += 2 * tripTime;  // going to customer + returning to restaurant
+        tempscooter->incDist(deliorder->getDistance() * 2);     // increase total distance (it *2 because it needs to go and comeback)
+        tempscooter->incrementDeliOreders();       // increase the orders delivered
+        backScooters.enqueue(tempscooter, -(ceil(deliorder->getDistance() / tempscooter->getSpeed()) + currentTime)); // put it in scooters back ordered by the time step they will comeback they will cut back
+        deliorder->setAssignedScooter(nullptr);     // free the pointer
+        return true;
+    }
+
+    return false;
+}
+void Restaurant::check_scooters_lists()
+{
+    Scooter* tempscooter = nullptr;
+    int pri;
+    while (backScooters.peek(tempscooter, pri)) {   //check the back scooters
+        if (-pri > currentTime) break;
+        backScooters.dequeue(tempscooter, pri);
+        if (tempscooter->getDeliOrders() >= Main_Ords) {
+            tempscooter->setTmain(currentTime);
+            maintScooters.enqueue(tempscooter);
+        }
+        else freeScooters.enqueue(tempscooter, -tempscooter->GetDistance());
+    }
+    while (failedBackScooters.peek(tempscooter, pri))
+    {
+        if (-pri > currentTime) break;
+        failedBackScooters.dequeue(tempscooter, pri);
+        tempscooter->setTmain(currentTime);
+        maintScooters.enqueue(tempscooter);// must enter maitScooter after failing 
+    }
+    while (rescueBackScooters.peek(tempscooter, pri))
+    {
+        if (-pri > currentTime) break;
+        rescueBackScooters.dequeue(tempscooter, pri);
+        freeRescueScooters.enqueue(tempscooter, -tempscooter->GetDistance()); // Rescue scooter becomes available again
+    }
+    tempscooter = nullptr;
+    while (maintScooters.peek(tempscooter)) {       //check the maint scooter
+        if (tempscooter->getFinishMaint() > currentTime) break;
+        maintScooters.dequeue(tempscooter);
+        tempscooter->resetTmaint();     //reset the maint finish time
+        tempscooter->resetDeliOreders();    // reset the delivered orders
+        freeScooters.enqueue(tempscooter, -tempscooter->GetDistance());
+    }
+}
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+
+//----------------------------------------------------------------------------------//
+//------------------------- Order functions ---------------------------------------//
+//----------------------------------------------------------------------------------//
 bool Restaurant::cancelOrderFromPending(int id)
 {
     // i check if it is ovc in the cancel function
@@ -513,6 +767,8 @@ bool Restaurant::cancelOrderFromCooking(int id)
 {
     Order* cancelledorder = nullptr;
     if (cooking.CancelOrder(id, cancelledorder)) {
+        // The order was cancelled while cooking.
+        cancelledorder->setTR(currentTime);// Set TR to currentTime so freeOrderChef() can count chef busy time.
         freeOrderChef(cancelledorder);
         cancelledOrders.enqueue(cancelledorder);
         return true;
@@ -530,51 +786,679 @@ bool Restaurant::cancelOrderFromReady(int id)
     return false;
 }
 
-bool Restaurant::freeOrderChef(Order* od)
+bool Restaurant::AddOrderToPending(Order* o)
 {
-    if (od->getAssignedChef() != nullptr) {
-        Chef* tempchef = od->getAssignedChef();
-        tempchef->releaseOrder();
-        if (tempchef->getType() == "CS") {
-            availCS.enqueue(tempchef);
+    string typ = o->getType();
+    if (typ == "Combo")// COMBO order is  the highest assignment priority 
+    {
+        pendCombo.enqueue(o);
+        numCombo++;
+        return true;
+    }
+    if (typ == "ODN") {
+        pendODN.enqueue(o);
+        numODN++;
+        return true;
+    }
+    else if (typ == "ODG") {
+        pendODG.enqueue(o);
+        numODG++;
+        return true;
+    }
+    else if (typ == "OT") {
+        pendOT.enqueue(o);
+        numOT++;
+        return true;
+    }
+    else if (typ == "OVC") {
+        pendOVC.enqueue(o);
+        numOVC++;
+        return true;
+    }
+    else if (typ == "OVN") {
+        pendOVN.enqueue(o);
+        numOVN++;
+        return true;
+    }
+    else if (typ == "OVG") {
+        DeliveryOrder* deliv = (DeliveryOrder*)o;
+        int pri = deliv->getOVGPriority(2, 2, 1);
+        pendOVG.enqueue(o, pri);
+        numOVG++;
+        return true;
+    }
+    else return false;
+}
+
+void Restaurant::check_inservice_orders()
+{
+    Order* temporder = nullptr;
+    int pri;
+    while (inServOrders.peek(temporder, pri)) {
+        if (-pri > currentTime) break;
+        inServOrders.dequeue(temporder, pri);
+
+        //if the order is combo
+        ComboOrder* combo = dynamic_cast<ComboOrder*>(temporder);
+        if (combo != nullptr)
+        {
+            freeComboScooters(combo);              // Free all scooters assigned to this combo order
+            temporder->setTF(currentTime);         // Combo order is completely finished now
+            finishedOrders.push(temporder);        // Move order to finished orders
+            continue;
+        }
+        // if the order is dinein
+        DineInOrder* dinein = dynamic_cast<DineInOrder*>(temporder);
+        if (dinein != nullptr) {
+            freeOrderTable(dinein);
+            temporder->setTF(currentTime);
+            finishedOrders.push(temporder);
+            continue;
+        }
+
+        //if the order is delivery
+        DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(temporder);
+        if (deliv != nullptr) {
+            if (deliv->isDeliveredByRescue())
+            {
+                Scooter* rescue = deliv->getAssignedScooter();
+                deliv->setTF(currentTime);
+                if (rescue)
+                {
+                    int rescueReturnTime = (int)ceil(deliv->getDistance() / rescue->getSpeed());
+                    rescue->incDist((int)ceil(deliv->getDistance() * 2));
+                    
+                    rescueBackScooters.enqueue(rescue, -(currentTime + rescueReturnTime));// Rescue scooter is go to backRescueScooters
+
+                    deliv->setAssignedScooter(nullptr);// Remove scooter from order
+                }
+                finishedOrders.push(deliv);
+                continue;
+            }
+            if (deliv->hasFailure())// if  scooter failed.
+            {
+                Scooter* failedScooter = deliv->getAssignedScooter();
+                Scooter* rescue = nullptr;
+                int rescuePri = 0;
+                if (!freeRescueScooters.dequeue(rescue, rescuePri))// if there is no freeRescue wait the next step
+                {
+                    inServOrders.enqueue(deliv, -(currentTime + 1));
+                    continue;
+                }
+                rescueMissionCount++;// Rescue start
+                float failureDistance = deliv->getFailureDistance();
+
+                int rescueTravelTime = (int)ceil(failureDistance / rescue->getSpeed());
+
+                int rescueArrivalTime = currentTime + rescueTravelTime;
+                if (failedScooter)
+                {
+                    int failedReturnTime = (int)ceil(failureDistance / failedScooter->getSpeed());
+                    //from the time of service until waiting for the rescue + return to restaurant
+                    totalScooterBusyTime += (rescueArrivalTime - deliv->getTS()) + failedReturnTime;
+                    failedScooter->incDist((int)ceil(failureDistance * 2));//update the distance 
+                    failedBackScooters.enqueue(failedScooter, -(rescueArrivalTime + failedReturnTime));
+                }
+                deliv->setAssignedScooter(rescue);
+                deliv->setDeliveredByRescue(true);
+                deliv->clearFailure();// remove failue we don't allow to fail again
+                float remainingDistance = deliv->getDistance() - failureDistance;
+                if (remainingDistance < 0) remainingDistance = 0;
+
+                //Rescue scooter completes the remaining distance   
+                int rescueDeliveryTime = (int)ceil(remainingDistance / rescue->getSpeed());
+                int rescueFinishTime = rescueArrivalTime + rescueDeliveryTime;
+
+                inServOrders.enqueue(deliv, -rescueFinishTime);
+                continue;
+            }
+            freeOrderScooter(deliv);
+            temporder->setTF(currentTime);
+            finishedOrders.push(temporder);
+            continue;
+        }
+    }
+}
+
+void Restaurant::check_overwait_orders()
+{
+    LinkedQueue<Order*> tempqueue;
+    Order* temporder;
+    while (readyOV.dequeue(temporder)) {
+        if (temporder->getType() == "OVG" && temporder->getTR() != -1 && (currentTime - temporder->getTR() > TH)) {
+            overWaitOVG.enqueue(temporder, -temporder->getTQ());
+            overwaitCount++;
+            continue;
+        }
+        tempqueue.enqueue(temporder);
+    }
+    while (tempqueue.dequeue(temporder)) {
+        readyOV.enqueue(temporder);
+    }
+}
+
+void Restaurant::check_cooking_orders()
+{
+    Order* temporder = nullptr;
+    int pri;
+    while (cooking.peek(temporder, pri)) {
+        if (-pri > currentTime) break;
+        cooking.dequeue(temporder, pri);
+        temporder->setTR(currentTime);
+        // if teh order is  COMBO order
+        ComboOrder* combo = dynamic_cast<ComboOrder*>(temporder); // Check combo first
+        if (combo != nullptr)
+        {
+            freeComboChefs(combo);// free all chefs assigned to this combo
+            readyCombo.enqueue(temporder);// Move combo to ready combo list
+            continue;
+        }
+        freeOrderChef(temporder);
+        // if the order is dinein
+        DineInOrder* dinein = dynamic_cast<DineInOrder*>(temporder);
+        if (dinein != nullptr) {
+            readyOD.enqueue(temporder);
+            continue;
+        }
+
+        //if the order is delivery
+        DeliveryOrder* deliv = dynamic_cast<DeliveryOrder*>(temporder);
+        if (deliv != nullptr) {
+            readyOV.enqueue(temporder);
+            continue;
+        }
+
+        // if the order is takeaway
+        TakeawayOrder* take = dynamic_cast<TakeawayOrder*>(temporder);
+        if (take != nullptr) {
+            readyOT.enqueue(temporder);
+            continue;
+        }
+    }
+}
+
+void Restaurant::check_ready_orders()
+{
+    Order* od = nullptr;
+    int pri;
+    // Combo orders first
+    while (readyCombo.peek(od))
+    {
+        if (assignComboToScooters(od))
+            readyCombo.dequeue(od);
+        else    break;
+    }
+    while(readyOD.peek(od))   //check the list
+    {
+        if (assignToTable(od)) {    //if the order is assigned to table, it will move to service list
+            readyOD.dequeue(od);    //dequeue it from the ready list
+        }
+        else break;
+    }
+   
+    while(readyOT.peek(od)) {
+        if (od->getTR() == -1 || currentTime - od->getTR() < 1) break;
+        readyOT.dequeue(od);
+        od->setTS(od->getTR()); // Packing starts when the order becomes ready
+        od->setTF(od->getTR() + 1); // Customer picks it after 1 timestep
+        finishedOrders.push(od);
+    }
+    while (overWaitOVG.peek(od,pri)) {      //first assign all overwait OVG
+        if (assignToScooter(od)) {
+            overWaitOVG.dequeue(od, pri);
+        }
+        else break;
+    }
+    // Assign OVC orders first from readyOV.
+    int n = readyOV.GetCount();
+    for (int i = 0; i < n; i++)
+    {
+        readyOV.dequeue(od);
+        if (od->getType() == "OVC" && !freeScooters.isEmpty())  assignToScooter(od);
+        else  readyOV.enqueue(od);// if not OVC, or no scooter available return order back to readyOV
+    }
+    //Assign remaining readyOV orders by FCFS.
+    while(readyOV.peek(od)) {
+        if (assignToScooter(od)) {      // if order is assigned to scooter, it will be moved to servise list
+            readyOV.dequeue(od);
+        }
+        else break;
+    }
+}
+
+void Restaurant::AssignPendingToChefs()
+{
+    while (true) {
+        Order* comboOrder = nullptr;
+        if (pendCombo.peek(comboOrder))// Check if there is any pending combo order
+        {
+            if (assignComboToChefs(comboOrder))// Try to assign all required chefs to combo
+            {
+                pendCombo.dequeue(comboOrder);// Remove combo from pending only after Assigning
+                continue; // Continue loop to try assigning more Orders
+            }
+            else     break; // Combo exists but cannot get enough chefs so stop because combo has highest priority
+        }
+
+        bool hasCN = (availCN.GetCount() > 0);
+        bool hasCS = (availCS.GetCount() > 0);
+        if (!hasCN && !hasCS) {
+            break;
+        }
+
+        Order* oldestOrder = nullptr;
+        int minTime = INT16_MAX;
+
+        Order* temp = nullptr;
+        int pri = 0;
+
+        if (hasCS && pendODG.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if ((hasCN || hasCS) && pendODN.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCN && pendOT.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCS && pendOVG.peek(temp, pri)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if ((hasCN || hasCS) && pendOVC.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (hasCN && pendOVN.peek(temp)) {
+            if (temp->getTQ() < minTime) { minTime = temp->getTQ(); oldestOrder = temp; }
+        }
+
+        if (oldestOrder == nullptr) {
+            break;
+        }
+
+        bool assigned = assignToChef(oldestOrder);
+
+        if (assigned) {
+            string type = oldestOrder->getType();
+
+            if (type == "ODG") {
+                pendODG.dequeue(temp);
+            }
+            else if (type == "ODN") {
+                pendODN.dequeue(temp);
+            }
+            else if (type == "OT") {
+                pendOT.dequeue(temp);
+            }
+            else if (type == "OVC") {
+                pendOVC.dequeue(temp);
+            }
+            else if (type == "OVG") {
+                pendOVG.dequeue(temp, pri);
+            }
+            else if (type == "OVN") {
+                pendOVN.dequeue(temp);
+            }
+
+
+            else {
+                break;
+            }
+        }
+    }
+}
+void Restaurant::check_action_list()
+{
+    Action* tempaction;
+    while (actions.peek(tempaction)) {
+        RequestAction* req = dynamic_cast<RequestAction*>(tempaction);
+        if (req != nullptr) {
+            if (req->getTQ() > currentTime) return;
+            actions.dequeue(tempaction);
+            tempaction->Act();
         }
         else {
-            availCN.enqueue(tempchef);
+            CancelAction* cancel = dynamic_cast<CancelAction*>(tempaction);
+            if (cancel != nullptr) {
+                if (cancel->getTcancel() > currentTime) return;
+                actions.dequeue(tempaction);
+                tempaction->Act();
+            }
         }
-        od->setAssignedChef(nullptr);
-        return true;
     }
-    return false;
 }
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
 
-bool Restaurant::freeOrderTable(DineInOrder* dinorder)
+
+
+//----------------------------------------------------------------------------------//
+//------------------------- Files functions ----------------------------------------//
+//----------------------------------------------------------------------------------//
+bool Restaurant::LoadInputFile(const string& filename)
 {
-    Table* temptable = dinorder->getAssignedTable();    // get the order table
-    if (temptable) {
-        temptable->freeSeats(dinorder->getSeats());
-        if (temptable->getBusySeats() == 0) {           // place it in the right list
-            freeTables.enqueue(temptable, -temptable->GetFreeSeats());
-        }
-        else {
-            busySharable.enqueue(temptable, -temptable->GetFreeSeats());
-        }
-        dinorder->setAssignedTable(nullptr);
-        return true;
+    ifstream inputFile(filename);
+    if (!inputFile.is_open())   return false;
+
+    float CN_Speed, CS_Speed;
+    int Scooter_Speed, Main_Dur, M;// M for the number of orders action (i changed it to actionscount)
+    inputFile >> num_CN >> num_CS;
+    inputFile >> CN_Speed >> CS_Speed;
+    for (int i = 0; i < num_CN; i++)    availCN.enqueue(new Chef("CN", CN_Speed));
+    for (int i = 0; i < num_CS; i++)    availCS.enqueue(new Chef("CS", CS_Speed));
+    inputFile >> Scooter_Count >> Scooter_Speed;
+    inputFile >> Rescue_Count;
+    inputFile >> Main_Ords >> Main_Dur;
+    for (int i = 0; i < Scooter_Count; i++)
+    {
+        Scooter* sco = new Scooter(Scooter_Speed, Main_Dur);
+        freeScooters.enqueue(sco,-sco->GetDistance());
     }
-    return false;
+    int rescueSpeed = Scooter_Speed * 3;// rescue scooters are faster
+    for (int i = 0; i < Rescue_Count; i++)// create rescue scooters
+    {
+        Scooter* rescue = new Scooter(rescueSpeed, Main_Dur);
+        freeRescueScooters.enqueue(rescue, -rescue->GetDistance());
+    }
+    inputFile >> total_Table;
+    int createdTable = 0;
+    while (createdTable < total_Table)
+    {
+        int Count, capacity;
+        inputFile >> Count >> capacity;
+        for (int i = 0; i < Count && createdTable < total_Table; i++)
+        {
+            Table* table = new Table(capacity);
+            freeTables.enqueue(table, -table->GetFreeSeats());
+            createdTable++;
+        }
+    }
+    inputFile >> TH;
+    inputFile >> M;
+    for (int i = 0; i < M; i++)
+    {
+        char letter;
+        inputFile >> letter;
+        if (letter == 'Q')
+        {
+            string TYP;
+            int TQ, ID, SIZE;
+            float Price;
+            inputFile >> TYP >> TQ >> ID >> SIZE >> Price;
+            Action* action = nullptr;
+            if (TYP == "ODG" || TYP == "ODN")
+            {
+                int seats, duration;
+                bool canShare;
+                char chshare;
+                inputFile >> seats >> duration >> chshare;
+                canShare = chshare == 'Y';
+                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, seats, duration, canShare);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OVC" || TYP == "OVG" || TYP == "OVN")
+            {
+                float distance;
+                inputFile >> distance;
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price, distance);
+                actions.enqueue(action);
+            }
+            else if (TYP == "OT")
+            {
+                action = new RequestAction(this,TYP, TQ, ID, SIZE, Price);
+                actions.enqueue(action);
+            }
+            else if (TYP == "Combo")
+            {
+                float Distance; int ChefNeeded, ScooterNeeded;
+                inputFile >> Distance >> ChefNeeded >> ScooterNeeded;
+                action = new RequestAction(this, TYP, TQ, ID, SIZE, Price, Distance, ChefNeeded, ScooterNeeded);
+                actions.enqueue(action);
+            }
+            orderCount++;
+        }
+        else if (letter == 'X')
+        {
+            int Tcancel, ID;
+            inputFile >> Tcancel >> ID;
+            Action* act = new CancelAction(this,Tcancel, ID);
+            actions.enqueue(act);
+        }
+    }
+    inputFile.close();
+    return true;
 }
 
-bool Restaurant::freeOrderScooter(DeliveryOrder* deliorder) // missing : check if it needs to go to the maintenence
+bool Restaurant::GenerateOutputFile(const string& filename)
 {
-    Scooter* tempscooter = deliorder->getAssignedScooter();     // get the order scooter
-    if (tempscooter) {
-        tempscooter->incDist(deliorder->getDistance());     // increase total distance
-        tempscooter->incrementDeliOreders();       // increase the orders delivered
-        backScooters.enqueue(tempscooter, -deliorder->getDistance()) ; // put it in scooters back ordered by the distace they will cut back
-        deliorder->setAssignedScooter(nullptr);     // free the pointer
-        return true;
-    }
-    
-    return false;
-}
+    ofstream outputFile(filename);
+    if (!outputFile.is_open()) return false;
 
+    double sumTi = 0, sumTc = 0, sumTw = 0, sumTserv = 0;
+
+    // ── helper: pad a number into a fixed-width string ─────────────
+    // No iomanip needed — just use to_string + spaces
+    auto pad = [](int v, int w) -> string {
+        string s = to_string(v);
+        while ((int)s.size() < w) s += " ";
+        return s;
+        };
+    auto padd = [](double v, int w) -> string {
+        // two decimal places manually
+        int whole = (int)v;
+        int frac = (int)((v - whole) * 100 + 0.5);
+        string s = to_string(whole) + "." + (frac < 10 ? "0" : "") + to_string(frac);
+        while ((int)s.size() < w) s += " ";
+        return s;
+        };
+
+    // ================================================================
+    //  ORDER LOG
+    // ================================================================
+    outputFile << "================================================================\n";
+    outputFile << "                    RESTAURANT SIMULATOR                       \n";
+    outputFile << "                        ORDER LOG                              \n";
+    outputFile << "================================================================\n\n";
+    outputFile << "TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv\n";
+    outputFile << "----------------------------------------------------------------\n";
+
+    ArrayStack<Order*> tempFinish;
+    Order* o = nullptr;
+    while (finishedOrders.pop(o))
+    {
+        outputFile << pad(o->getTF(), 6) << pad(o->getID(), 6) << pad(o->getTQ(), 6)
+            << pad(o->getTA(), 6) << pad(o->getTR(), 6) << pad(o->getTS(), 6)
+            << pad(o->getTi(), 6) << pad(o->getTc(), 6) << pad(o->getTw(), 6)
+            << pad(o->getTserv(), 6) << "\n";
+
+        if (o->getTi() != -1) sumTi += o->getTi();
+        if (o->getTc() != -1) sumTc += o->getTc();
+        if (o->getTw() != -1) sumTw += o->getTw();
+        if (o->getTserv() != -1) sumTserv += o->getTserv();
+
+        tempFinish.push(o);
+    }
+    while (tempFinish.pop(o)) finishedOrders.push(o);
+    outputFile << "----------------------------------------------------------------\n\n";
+
+    // ── derived values ─────────────────────────────────────────────
+    int    fi = finishedOrders.GetCount();
+    double avgTi = fi ? sumTi / fi : 0.0;
+    double avgTc = fi ? sumTc / fi : 0.0;
+    double avgTw = fi ? sumTw / fi : 0.0;
+    double avgTserv = fi ? sumTserv / fi : 0.0;
+
+    double finishedPercent = orderCount ? (fi * 100.0) / orderCount : 0.0;
+    double cancelledPercent = orderCount ? (cancelledOrders.GetCount() * 100.0) / orderCount : 0.0;
+    double overwaitPercent = orderCount ? (overwaitCount * 100.0) / orderCount : 0.0;
+
+    int    simTime = currentTime - 1;
+    int    numChefs = num_CN + num_CS;
+    double chefUtil = (simTime > 0 && numChefs > 0) ? (100.0 * totalChefBusyTime) / (simTime * numChefs) : 0.0;
+    double scooterUtil = (simTime > 0 && Scooter_Count > 0) ? (100.0 * totalScooterBusyTime) / (simTime * Scooter_Count) : 0.0;
+
+    // ================================================================
+    //  STATISTICS
+    // ================================================================
+    outputFile << "================================================================\n";
+    outputFile << "                        STATISTICS                             \n";
+    outputFile << "================================================================\n\n";
+
+    outputFile << "  [1] Order Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Orders          | " << pad(orderCount, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Dine-in Grilled (ODG) | " << pad(numODG, 5) << " |\n";
+    outputFile << "      | Dine-in Normal  (ODN) | " << pad(numODN, 5) << " |\n";
+    outputFile << "      | Takeaway        (OT)  | " << pad(numOT, 5) << " |\n";
+    outputFile << "      | Delivery Cold   (OVC) | " << pad(numOVC, 5) << " |\n";
+    outputFile << "      | Delivery Grilled(OVG) | " << pad(numOVG, 5) << " |\n";
+    outputFile << "      | Delivery Normal (OVN) | " << pad(numOVN, 5) << " |\n";
+    outputFile << "      | Combo                 | " << pad(numCombo, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [2] Chef Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Chefs           | " << pad(numChefs, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Normal Chefs    (CN)  | " << pad(num_CN, 5) << " |\n";
+    outputFile << "      | Special Chefs   (CS)  | " << pad(num_CS, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [3] Scooter Counts\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Total Scooters        | " << pad(Scooter_Count + Rescue_Count, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Normal Scooters       | " << pad(Scooter_Count, 5) << " |\n";
+    outputFile << "      | Rescue Scooters       | " << pad(Rescue_Count, 5) << " |\n";
+    outputFile << "      | Rescue Missions       | " << pad(rescueMissionCount, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [4] Order Outcomes\n";
+    outputFile << "      +-----------------------+--------+\n";
+    outputFile << "      | Finished Orders %     | " << padd(finishedPercent, 5) << "% |\n";
+    outputFile << "      | Cancelled Orders %    | " << padd(cancelledPercent, 5) << "% |\n";
+    outputFile << "      | Overwait Orders %     | " << padd(overwaitPercent, 5) << "% |\n";
+    outputFile << "      +-----------------------+--------+\n\n";
+
+    outputFile << "  [5] Averages  (finished orders)\n";
+    outputFile << "      +-----------------------+-------+\n";
+    outputFile << "      | Avg Ti                | " << padd(avgTi, 5) << " |\n";
+    outputFile << "      | Avg TC                | " << padd(avgTc, 5) << " |\n";
+    outputFile << "      | Avg Tw                | " << padd(avgTw, 5) << " |\n";
+    outputFile << "      | Avg Tserv             | " << padd(avgTserv, 5) << " |\n";
+    outputFile << "      +-----------------------+-------+\n\n";
+
+    outputFile << "  [6] Utilization\n";
+    outputFile << "      +-----------------------+--------+\n";
+    outputFile << "      | Chefs Util %          | " << padd(chefUtil, 5) << "% |\n";
+    outputFile << "      | Scooters Util %       | " << padd(scooterUtil, 5) << "% |\n";
+    outputFile << "      | (rescue scooters excluded)     |\n";
+    outputFile << "      +-----------------------+--------+\n\n";
+
+    outputFile << "================================================================\n";
+
+    outputFile.close();
+    return true;
+}
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+
+//----------------------------------------------------------------------------------//
+//------------------------- Combo Functions ----------------------------------------//
+//----------------------------------------------------------------------------------//
+bool Restaurant::assignComboToChefs(Order* od)
+{
+    ComboOrder* combo = dynamic_cast<ComboOrder*>(od);
+    if (!combo) return false;
+    int need = combo->getChefNeeded();// number of chefs needed from input file
+    if (need < 1 || need > 4) return false;// up to 4 chefs(this is impossible unless written wrong in the input file)
+    if (availCS.GetCount() < 1) return false;// at least one CS is required
+    if (availCN.GetCount() + availCS.GetCount() < need) return false; // not enough chefs
+    Chef* chef = nullptr; 
+    float totalSpeed = 0; // total speed of all assigned chefs
+    availCS.dequeue(chef);// first chef must be CS
+    chef->assignOrder();// mark chef busy
+    combo->addComboChef(chef);// store exact chef in combo
+    totalSpeed += chef->getSpeed();// add speed
+    while (combo->getComboChefCount() < need)// assign remaining chefs
+    {
+        chef = nullptr;
+        if (!availCN.isEmpty())      availCN.dequeue(chef);   // prefer CN for remaining chefs to save CS
+        else availCS.dequeue(chef);// use CS if CN not enough
+        chef->assignOrder();// mark chef busy
+        combo->addComboChef(chef);// store exact chef in ComboChefs queue
+        totalSpeed += chef->getSpeed();// add speed of the chefs
+    }
+    combo->setTA(currentTime);// time assigned to chefs
+    int cookingTime = (int)ceil((float)combo->getSize() / totalSpeed); // combined cooking time
+    int finishTime = currentTime + cookingTime;// when cooking finishes
+    cooking.enqueue(combo, -finishTime);
+    return true;
+}
+bool Restaurant::freeComboChefs(ComboOrder* combo)
+{
+    if (!combo) return false;
+    int usedChefs = combo->getComboChefCount();
+    if (combo->getTA() != -1 && combo->getTR() != -1)
+        totalChefBusyTime += (combo->getTR() - combo->getTA()) * usedChefs;
+
+    Chef* chef = nullptr;
+    while (combo->removeComboChef(chef))// remove all combo chefs
+    {
+        if (chef)
+        {
+            chef->releaseOrder();// chef becomes free
+            if (chef->getType() == "CS")    availCS.enqueue(chef);// return to correct chef list
+            else    availCN.enqueue(chef);
+        }
+    }
+    return true; 
+}
+bool Restaurant::assignComboToScooters(Order* od)
+{
+    ComboOrder* combo = dynamic_cast<ComboOrder*>(od);
+    if (!combo) return false;
+    int need = combo->getScooterNeeded();// number of scooters required
+    if (need < 2) return false; //2 or more scooters(this is impossible unless written wrong in the input file)
+    if (freeScooters.GetCount() < need) return false;// not enough scooters
+    Scooter* scooter = nullptr;
+    int pri = 0;
+    int tripTime = 0;
+    for (int i = 0; i < need; i++)
+    {
+        freeScooters.dequeue(scooter, pri);// take best available scooter
+        if (i == 0)// all scooters have same speed
+            tripTime = (int)ceil(combo->getDistance() / scooter->getSpeed());
+        combo->addComboScooter(scooter); // remember exact scooter
+    }
+    combo->setTS(currentTime); // service time setup (service starts now)
+    inServOrders.enqueue(combo, -(currentTime + tripTime));     // priority according to finishTime(order finishes after trip time)
+    return true;
+}
+bool Restaurant::freeComboScooters(ComboOrder* combo)
+{
+    if (!combo) return false;
+    Scooter* scooter = nullptr;
+    while (combo->removeComboScooter(scooter))// remove all combo scooters
+    {
+        if (scooter)
+        {
+            int tripTime = (int)ceil(combo->getDistance() / scooter->getSpeed());
+            totalScooterBusyTime += 2 * tripTime; // go + return busy time
+            scooter->incDist((int)ceil(combo->getDistance() * 2)); // go + return distance(to update the distance of the scooter)
+            scooter->incrementDeliOreders();// count delivered order (to Main_Ord)
+            backScooters.enqueue(scooter, -(currentTime + tripTime));
+        }
+    }
+    return true;
+}
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//
+//----------------------------------------------------------------------------------//

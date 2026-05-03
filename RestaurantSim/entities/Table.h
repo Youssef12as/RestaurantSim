@@ -39,6 +39,7 @@ public:
 
     void freeSeats(int seats) {  // this is for freeing seats when a order is finished (pass the order seats)
         FreeSeats += seats;
+        if (FreeSeats > Capacity) FreeSeats = Capacity;
     }
 
     
