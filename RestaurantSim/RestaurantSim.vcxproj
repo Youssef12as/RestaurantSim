@@ -144,10 +144,10 @@
     <ClInclude Include="ds\QueueADT.h" />
     <ClInclude Include="ds\StackADT.h" />
     <ClInclude Include="entities\Chef.h" />
+    <ClInclude Include="entities\ComboOrder.h" />
     <ClInclude Include="entities\Order.h" />
     <ClInclude Include="entities\Scooter.h" />
     <ClInclude Include="entities\Table.h" />
-    <ClInclude Include="PriorityParameters.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Restaurant.cpp" />
@@ -155,15 +155,15 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="input1.txt" />
-    <Text Include="input2.txt" />
-    <Text Include="input3.txt" />
-    <Text Include="input4.txt" />
-    <Text Include="input6.txt" />
+    <Text Include="input1Cancellation.txt" />
+    <Text Include="input2RescueScooters.txt" />
+    <Text Include="input3TableSharing.txt" />
+    <Text Include="input4Maintenace.txt" />
+    <Text Include="input6Comperhensive.txt" />
     <Text Include="Test_description.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="input5.txt" />
+    <None Include="input5Cancellation.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

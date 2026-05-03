@@ -1,0 +1,27 @@
+								========================================
+								Restaurant Simulation Test Description
+								========================================
+
+input1Cancellation.txt:
+This file contains 50 actions and focuses on testing pending  cancellation scenarios.
+It checks that cancellable OVC orders are removed.
+
+input2RescueScooters.txt:
+This file contains 100 actions and focuses on testing the rescue scooter scenarios.
+It includes a large number of delivery orders.
+
+input3TableSharing.txt:
+This file contains 150 actions and mainly tests dine-in table assignment and table sharing.
+The number of tables is limited compared with the number of dine-in requests, so table pressure appear clearly.
+
+
+input4Maintenance.txt:
+This file contains 200 actions and mainly tests scooter maintenance behavior.
+it uses small Main_Ords = 2. This make the scooter will enter the maintenance after 2 delivery.
+
+input5Cancellation.txt:
+This file contains 250 actions and focuses mainly on cancellation scenarios during pending, cooking and ready
+It includes 150 request actions and 100 cancellation actions.
+
+input6Comperhensive.txt:
+This file is the most comprehensive test file, testes all orders type
