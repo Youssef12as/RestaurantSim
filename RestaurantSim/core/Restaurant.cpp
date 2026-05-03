@@ -26,12 +26,17 @@ Restaurant::~Restaurant()
 void Restaurant::main_simulation()
 {
     string inFile = pUI->ReadInputFileName();   // get input file
+    //load input file
+    if (!LoadInputFile(inFile))
+    {
+        cout << "Error: input file not found or cannot be opened.\n";
+        return;
+    }
     string outFile = pUI->ReadOutputFileName(); // get output file
     ProgramMode currentMode = pUI->ReadMode();   //get mode
     if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
 
-    //load input file
-    LoadInputFile(inFile);
+    
     cout << "orders:" << orderCount << endl;
     if (currentMode == ProgramMode::Interactive) {
         pUI->PrintCurrentState(0, actions, pendODG, pendODN, pendOT, pendOVN, pendOVC, pendOVG, pendCombo,
@@ -996,8 +1001,8 @@ void Restaurant::check_ready_orders()
     while(readyOT.peek(od)) {
         if (od->getTR() == -1 || currentTime - od->getTR() < 1) break;
         readyOT.dequeue(od);
-        od->setTS(currentTime);//to avoid making TS = -1
-        od->setTF(currentTime);
+        od->setTS(od->getTR()); // Packing starts when the order becomes ready
+        od->setTF(od->getTR() + 1); // Customer picks it after 1 timestep
         finishedOrders.push(od);
     }
     while (overWaitOVG.peek(od,pri)) {      //first assign all overwait OVG
