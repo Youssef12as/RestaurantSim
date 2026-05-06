@@ -19,7 +19,7 @@ public:
             int pri = 0;
             dequeue(currentOrder, pri);
 
-            if (!found && currentOrder && currentOrder->getID() == id)
+            if (!found && currentOrder && currentOrder->getID() == id && currentOrder->getType() == "OVC")
             {
                 cancelledOrder = currentOrder;
                 found = true;

@@ -18,7 +18,7 @@ public:
             Order* currentOrder = nullptr;
             dequeue(currentOrder);     // remove front and store it in currentOrder
 
-            if (currentOrder && currentOrder->getID() == id && dynamic_cast<DeliveryOrder*>(currentOrder) && currentOrder->getType()[2] == 'C')  //check that is ovc
+            if (currentOrder && currentOrder->getID() == id && currentOrder->getType() == "OVC")  //check that is ovc
             {
                 cancelledOrder = currentOrder;
                 found = true;           // found and removed    mohamed: i removed the return and put a flag
