@@ -121,6 +121,7 @@ public:
 
    
    // The input file
+   bool ValidateInputFile(const string& filename, string& reason) const;
    bool LoadInputFile(const string& filename);
    //The output file and statistic
    bool GenerateOutputFile(const string& filename);

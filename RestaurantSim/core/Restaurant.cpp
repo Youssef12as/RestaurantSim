@@ -4,6 +4,7 @@
 #include <random>
 #include"../actions/RequestAction.h"
 #include"../actions/CancelAction.h"
+#include <sstream>
 Restaurant::Restaurant()
 {
 	pUI = new UI;
@@ -26,12 +27,16 @@ Restaurant::~Restaurant()
 void Restaurant::main_simulation()
 {
     string inFile = pUI->ReadInputFileName();   // get input file
+    string errorReason;
     //load input file
-    while (!LoadInputFile(inFile))
+    while (!ValidateInputFile(inFile, errorReason))
     {
-        cout << "Error: input file not found or cannot be opened.\n";
-        pUI->ReadInputFileName();
+        cout << " Invalid input file.\n"<< "Reason: " << errorReason << "\n";
+        cout << "Simulation did not start.try Again!\n";
+        inFile = pUI->ReadInputFileName();
     }
+    cout << "Input file validation succeeded.\n";
+    LoadInputFile(inFile);
     string outFile = pUI->ReadOutputFileName(); // get output file
     ProgramMode currentMode = pUI->ReadMode();   //get mode
     if (currentMode == ProgramMode::Silent) pUI->PrintStartSilent();
@@ -1140,6 +1145,449 @@ void Restaurant::check_action_list()
 //----------------------------------------------------------------------------------//
 //------------------------- Files functions ----------------------------------------//
 //----------------------------------------------------------------------------------//
+bool ReadNonEmptyLine(ifstream& inputFile, string& currentLine, int& lineNumber, string& errorReason, const string& expectedLineName)
+{
+    while (getline(inputFile, currentLine))
+    {
+        lineNumber++;
+        if (currentLine.empty())        continue;//Ignore this empty line and continue
+        return true;
+    }
+    // So the expected line is missing.we reach the end of file 
+    errorReason = "Missing line: " + expectedLineName;
+    return false;
+}
+bool HasExtraValues(istringstream& lineReader)//Check if there are extra unexpected values in the current line.
+{
+    string extraValue;
+    if (lineReader >> extraValue)        return true;
+    return false;
+}
+bool QueueId(LinkedQueue<int>& idQueue, int targetId)
+{
+    int numberOfIds = idQueue.GetCount();
+    bool found = false;
+    for (int i = 0; i < numberOfIds; i++)
+    {
+        int currentId = 0;
+        idQueue.dequeue(currentId);
+        if (currentId == targetId)        found = true;
+        idQueue.enqueue(currentId);
+    }
+    return found;
+}
+bool Restaurant::ValidateInputFile(const string& filename, string& errorReason) const
+{
+    ifstream inputFile(filename);
+    if (!inputFile.is_open())
+    {
+        errorReason = "File cannot be opened.";
+        return false;
+    }
+    string currentLine;
+    int lineNumber = 0;
+    int normalChefCount = 0, specialChefCount = 0;
+
+    // 1) Read CN CS
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "CN CS"))        return false;
+
+    istringstream chefCountLine(currentLine);
+    if (!(chefCountLine >> normalChefCount >> specialChefCount) || HasExtraValues(chefCountLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 2 values: CN CS.";
+        return false;
+    }
+    if (normalChefCount < 0 || specialChefCount < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": chef counts cannot be negative.";
+        return false;
+    }
+    if (normalChefCount + specialChefCount == 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": restaurant must have at least one chef.";
+        return false;
+    }
+    float normalChefSpeed = 0, specialChefSpeed = 0;
+    // 2) Read CN_speed CS_speed
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "CN_speed CS_speed"))     return false;
+    istringstream chefSpeedLine(currentLine);
+    if (!(chefSpeedLine >> normalChefSpeed >> specialChefSpeed) || HasExtraValues(chefSpeedLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 2 values: CN_speed CS_speed.";
+        return false;
+    }
+    if (normalChefSpeed <= 0 || specialChefSpeed <= 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": chef speeds must be greater than zero.";
+        return false;
+    }
+    int scooterCount = 0, scooterSpeed = 0;
+    // 3) Read S_count S_speed
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "S_count S_speed"))  return false;
+    istringstream scooterLine(currentLine);
+    if (!(scooterLine >> scooterCount >> scooterSpeed) || HasExtraValues(scooterLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 2 values: S_count S_speed.";
+        return false;
+    }
+    if (scooterCount < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": scooter count cannot be negative.";
+        return false;
+    }
+    if (scooterSpeed <= 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": scooter speed must be greater than zero.";
+        return false;
+    }
+    int rescueScooterCount = 0;
+    // 4) Read Rescue_Count
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "Rescue_Count"))  return false;
+    istringstream rescueScooterLine(currentLine);
+    if (!(rescueScooterLine >> rescueScooterCount) || HasExtraValues(rescueScooterLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 1 value: Rescue_Count.";
+        return false;
+    }
+    if (rescueScooterCount < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": Rescue_Count cannot be negative.";
+        return false;
+    }
+    int maintenanceOrder = 0, maintenanceDuration = 0;
+
+    // 5) Read Main_Ords Main_Dur
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "Main_Ords Main_Dur")) return false;
+    istringstream maintenanceLine(currentLine);
+    if (!(maintenanceLine >> maintenanceOrder >> maintenanceDuration) || HasExtraValues(maintenanceLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 2 values: Main_Ords Main_Dur.";
+        return false;
+    }
+    if (maintenanceOrder <= 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": Main_Ords must be greater than zero.";
+        return false;
+    }
+    if (maintenanceDuration < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": Main_Dur cannot be negative.";
+        return false;
+    }
+    int totalTableCount = 0;
+    // 6) Read Total_no_of_Tables
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "Total_no_of_Tables"))return false;
+
+    istringstream totalTablesLine(currentLine);
+    if (!(totalTablesLine >> totalTableCount) || HasExtraValues(totalTablesLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 1 value: Total_no_of_Tables.";
+        return false;
+    }
+    if (totalTableCount <= 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": total number of tables must be greater than zero.";
+        return false;
+    }
+    int createdTableCount = 0, maximumTableCapacity = 0;
+    // 7) Read Table_count Capacity pairs
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "Table_count Capacity pairs"))  return false;
+    istringstream tablePairsLine(currentLine);
+    while (createdTableCount < totalTableCount)
+    {
+        int tableCount = 0, tableCapacity = 0;
+        if (!(tablePairsLine >> tableCount >> tableCapacity))
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": missing or incomplete table count/capacity pair.";
+            return false;
+        }
+        if (tableCount <= 0)
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": table count must be greater than zero.";
+            return false;
+        }
+
+        if (tableCapacity <= 0)
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": table capacity must be greater than zero.";
+            return false;
+        }
+        createdTableCount += tableCount;
+        if (tableCapacity > maximumTableCapacity)            maximumTableCapacity = tableCapacity;
+        if (createdTableCount > totalTableCount)
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": table counts exceed Total_no_of_Tables.";
+            return false;
+        }
+    }
+    if (HasExtraValues(tablePairsLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": too many table count/capacity values.";
+        return false;
+    }
+    int overwaitThreshold = 0;
+    // 8) Read TH
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "TH"))        return false;
+    istringstream overwaitThresholdLine(currentLine);
+    if (!(overwaitThresholdLine >> overwaitThreshold) || HasExtraValues(overwaitThresholdLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 1 value: TH.";
+        return false;
+    }
+    if (overwaitThreshold < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": TH cannot be negative.";
+        return false;
+    }
+    int numberOfActions = 0;
+    // 9) Read M
+    if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "M"))        return false;
+    istringstream numberOfActionsLine(currentLine);
+    if (!(numberOfActionsLine >> numberOfActions) || HasExtraValues(numberOfActionsLine))
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": expected exactly 1 value: M.";
+        return false;
+    }
+    if (numberOfActions < 0)
+    {
+        errorReason = "Line " + to_string(lineNumber) + ": number of actions cannot be negative.";
+        return false;
+    }
+    LinkedQueue<int> allOrderIds;
+    LinkedQueue<int> OVCIds;
+    LinkedQueue<int> cancelledOVCIds;
+    int lastActionTime = -1;
+    // 10) Read action lines
+    for (int i = 1; i <= numberOfActions; i++)
+    {
+        if (!ReadNonEmptyLine(inputFile, currentLine, lineNumber, errorReason, "Action line"))
+        {
+            errorReason = "Missing action line number " + to_string(i) + ".";
+            return false;
+        }
+        istringstream actionLine(currentLine);
+        char actionLetter = '\0';
+        if (!(actionLine >> actionLetter))
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": missing action letter.";
+            return false;
+        }
+        if (actionLetter != 'Q' && actionLetter != 'X')
+        {
+            errorReason = "Line " + to_string(lineNumber) + ": action letter must be Q or X.";
+            return false;
+        }
+        if (actionLetter == 'Q')
+        {
+            string orderType; int requestTime = 0, orderId = 0, orderSize = 0; float orderPrice = 0;
+            if (!(actionLine >> orderType >> requestTime >> orderId >> orderSize >> orderPrice))
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": incomplete request action. Expected: Q TYP TQ ID SIZE Price.";
+                return false;
+            }
+            if (requestTime < 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": request time TQ cannot be negative.";
+                return false;
+            }
+            if (requestTime < lastActionTime)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": actions must be sorted by time.";
+                return false;
+            }
+            lastActionTime = requestTime;
+            if (orderId <= 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": order ID must be greater than zero.";
+                return false;
+            }
+            if (QueueId(allOrderIds, orderId))
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": duplicate order ID.";
+                return false;
+            }
+            if (orderSize <= 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": order size must be greater than zero.";
+                return false;
+            }
+            if (orderPrice <= 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": order price must be greater than zero.";
+                return false;
+            }
+            if (orderType == "ODG" || orderType == "ODN")
+            {
+                int requiredSeats = 0, dineInDuration = 0; char canShareLetter = '\0';
+                if (!(actionLine >> requiredSeats >> dineInDuration >> canShareLetter) || HasExtraValues(actionLine))
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OD format must be: Q TYP TQ ID SIZE Price Seats Duration Y/N.";
+                    return false;
+                }
+                if (requiredSeats <= 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": required seats must be greater than zero.";
+                    return false;
+                }
+                if (requiredSeats > maximumTableCapacity)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": required seats cannot fit in any single table.";
+                    return false;
+                }
+                if (dineInDuration <= 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": dine-in duration must be greater than zero.";
+                    return false;
+                }
+                if (canShareLetter != 'Y' && canShareLetter != 'N')
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": CanShare must be Y or N.";
+                    return false;
+                }
+                if (orderType == "ODG" && specialChefCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": ODG orders need at least one CS chef.";
+                    return false;
+                }
+                allOrderIds.enqueue(orderId);
+            }
+            else if (orderType == "OT")
+            {
+                if (HasExtraValues(actionLine))
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OT format must be: Q OT TQ ID SIZE Price.";
+                    return false;
+                }
+                if (normalChefCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OT orders need at least one CN chef.";
+                    return false;
+                }
+                allOrderIds.enqueue(orderId);
+            }
+            else if (orderType == "OVC" || orderType == "OVG" || orderType == "OVN")
+            {
+                float deliveryDistance = 0;
+                if (!(actionLine >> deliveryDistance) || HasExtraValues(actionLine))
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OV format must be: Q TYP TQ ID SIZE Price Distance.";
+                    return false;
+                }
+                if (deliveryDistance <= 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": delivery distance must be greater than zero.";
+                    return false;
+                }
+                if (scooterCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": delivery orders need at least one normal scooter.";
+                    return false;
+                }
+                if (orderType == "OVG" && specialChefCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OVG orders need at least one CS chef.";
+                    return false;
+                }
+                if (orderType == "OVN" && normalChefCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": OVN orders need at least one CN chef.";
+                    return false;
+                }
+                allOrderIds.enqueue(orderId);
+                if (orderType == "OVC")     OVCIds.enqueue(orderId);
+            }
+            else if (orderType == "Combo")
+            {
+                float deliveryDistance = 0; int neededChefCount = 0, neededScooterCount = 0;
+                if (!(actionLine >> deliveryDistance >> neededChefCount >> neededScooterCount) || HasExtraValues(actionLine))
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo format must be: Q Combo TQ ID SIZE Price Distance ChefNeeded ScooterNeeded.";
+                    return false;
+                }
+                if (deliveryDistance <= 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo distance must be greater than zero.";
+                    return false;
+                }
+                if (neededChefCount < 1 || neededChefCount > 4)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo chef count must be from 1 to 4.";
+                    return false;
+                }
+                if (neededChefCount > normalChefCount + specialChefCount)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo needs more chefs than available.";
+                    return false;
+                }
+                if (specialChefCount == 0)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo orders need at least one CS chef.";
+                    return false;
+                }
+                if (neededScooterCount < 2 || neededScooterCount > 4)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo scooter count must be from 2 to 4.";
+                    return false;
+                }
+                if (neededScooterCount > scooterCount)
+                {
+                    errorReason = "Line " + to_string(lineNumber) + ": Combo needs more normal scooters than teh available.";
+                    return false;
+                }
+                allOrderIds.enqueue(orderId);
+            }
+            else
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": unknown order type: " + orderType + ".";
+                return false;
+            }
+        }
+        else if (actionLetter == 'X')
+        {
+            int cancelTime = 0, orderId = 0;
+            if (!(actionLine >> cancelTime >> orderId) || HasExtraValues(actionLine))
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": X format must be: X Tcancel ID.";
+                return false;
+            }
+            if (cancelTime < 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": cancellation time cannot be negative.";
+                return false;
+            }
+            if (cancelTime < lastActionTime)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": actions must be sorted by time.";
+                return false;
+            }
+            lastActionTime = cancelTime;
+            if (orderId <= 0)
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": cancelled order ID must be greater than zero.";
+                return false;
+            }
+            if (!QueueId(OVCIds, orderId))
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": cancellation is allowed only for an requested OVC order.";
+                return false;
+            }
+            if (QueueId(cancelledOVCIds, orderId))
+            {
+                errorReason = "Line " + to_string(lineNumber) + ": this OVC order is already cancelled before.";
+                return false;
+            }
+            cancelledOVCIds.enqueue(orderId);
+        }
+    }
+    while (getline(inputFile, currentLine))
+    {
+        lineNumber++;
+        if (currentLine.empty())         continue;
+        errorReason = "Line " + to_string(lineNumber) + ": extra data found after the expected number of actions.";
+        return false;
+    }
+    return true;
+}
 bool Restaurant::LoadInputFile(const string& filename)
 {
     ifstream inputFile(filename);
