@@ -155,6 +155,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="inputCancelation.txt" />
+    <Text Include="inputvalidation.txt" />
     <Text Include="input1Cancellation.txt" />
     <Text Include="input2RescueScooters.txt" />
     <Text Include="input3TableSharing.txt" />
