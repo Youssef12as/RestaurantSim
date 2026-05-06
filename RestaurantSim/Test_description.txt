@@ -25,3 +25,12 @@ It includes 150 request actions and 100 cancellation actions.
 
 input6Comperhensive.txt:
 This file is the most comprehensive test file, testes all orders type
+
+input7Comperhensive.txt:
+This file is the most comprehensive test file, testes all orders type but larger
+
+inputvalidation.txt:
+This file tests the validation of the file
+
+inputCancelation.txt:
+This file is easy to track the cancel from different lists
