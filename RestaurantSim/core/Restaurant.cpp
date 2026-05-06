@@ -780,6 +780,7 @@ bool Restaurant::cancelOrderFromReady(int id)
 {
     Order* cancelledorder = nullptr;
     if (readyOV.CancelOrder(id, cancelledorder)) {
+
         cancelledOrders.enqueue(cancelledorder);
         return true;
     }
