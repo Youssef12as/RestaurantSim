@@ -134,4 +134,9 @@ public:
    
    void main_simulation();
    bool isSimulationFinished() const;
+
+
+   bool GenerateCSV();          
+   void LaunchDashboard();
+
 };

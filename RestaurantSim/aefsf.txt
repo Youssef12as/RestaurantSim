@@ -5,6 +5,7 @@
 
 TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv
 ----------------------------------------------------------------
+31    36    15    15    18    23    5     3     8     8     
 31    33    10    10    13    23    10    3     13    8     
 24    29    9     9     10    19    9     1     10    5     
 24    31    9     9     12    12    0     3     3     12    
@@ -34,13 +35,13 @@ TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv
 
   [1] Order Counts
       +-----------------------+-------+
-      | Total Orders          | 34    |
+      | Total Orders          | 35    |
       +-----------------------+-------+
       | Dine-in Grilled (ODG) | 2     |
       | Dine-in Normal  (ODN) | 3     |
       | Takeaway        (OT)  | 3     |
       | Delivery Cold   (OVC) | 18    |
-      | Delivery Grilled(OVG) | 4     |
+      | Delivery Grilled(OVG) | 5     |
       | Delivery Normal (OVN) | 3     |
       | Combo                 | 1     |
       +-----------------------+-------+
@@ -64,23 +65,23 @@ TF    ID    TQ    TA    TR    TS    Ti    TC    Tw    Tserv
 
   [4] Order Outcomes
       +-----------------------+--------+
-      | Finished Orders %     | 61.76% |
-      | Cancelled Orders %    | 38.24% |
+      | Finished Orders %     | 62.86% |
+      | Cancelled Orders %    | 37.14% |
       | Overwait Orders %     | 0.00 % |
       +-----------------------+--------+
 
   [5] Averages  (finished orders)
       +-----------------------+-------+
-      | Avg Ti                | 1.81  |
-      | Avg TC                | 1.62  |
-      | Avg Tw                | 3.43  |
-      | Avg Tserv             | 5.00  |
+      | Avg Ti                | 1.95  |
+      | Avg TC                | 1.68  |
+      | Avg Tw                | 3.64  |
+      | Avg Tserv             | 5.14  |
       +-----------------------+-------+
 
   [6] Utilization
       +-----------------------+--------+
-      | Chefs Util %          | 8.12 % |
-      | Scooters Util %       | 58.97% |
+      | Chefs Util %          | 8.76 % |
+      | Scooters Util %       | 65.81% |
       | (rescue scooters excluded)     |
       +-----------------------+--------+
 

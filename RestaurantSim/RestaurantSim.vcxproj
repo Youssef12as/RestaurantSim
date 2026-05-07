@@ -166,6 +166,7 @@
     <Text Include="Test_description.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="dashboard.py" />
     <None Include="input5Cancellation.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

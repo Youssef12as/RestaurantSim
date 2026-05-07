@@ -75,7 +75,9 @@ void Restaurant::main_simulation()
         currentTime++;
     }
     GenerateOutputFile(outFile);
+    GenerateCSV();          // export restaurant_data.csv for the dashboard
     if (currentMode == ProgramMode::Silent) pUI->PrintEndSilent();
+    LaunchDashboard();      // ask user if they want to visualize
 }
 
 bool Restaurant::isSimulationFinished() const
@@ -1908,6 +1910,85 @@ bool Restaurant::freeComboScooters(ComboOrder* combo)
     }
     return true;
 }
+
+
 //----------------------------------------------------------------------------------//
+//------------------------- CSV Export & Dashboard Launch ---------------------------//
 //----------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------//
+bool Restaurant::GenerateCSV()
+{
+    ofstream csv("restaurant_data.csv");
+    if (!csv.is_open()) return false;
+
+    csv << "ID,Type,TQ,TA,TR,TS,TF,WaitTime,ServiceTime\n";
+
+    // --- finished orders (ArrayStack — pop then restore) ---
+    ArrayStack<Order*> tempFinish;
+    Order* o = nullptr;
+    while (finishedOrders.pop(o))
+    {
+        string typ = o->getType();
+        // Map internal "Combo" label to short code "OC"
+        if (typ == "Combo") typ = "OC";
+
+        int wait = (o->getTw() != -1) ? o->getTw() : 0;
+        int serv = (o->getTserv() != -1) ? o->getTserv() : 0;
+
+        csv << o->getID() << "," << typ << ","
+            << o->getTQ() << "," << o->getTA() << ","
+            << o->getTR() << "," << o->getTS() << ","
+            << o->getTF() << "," << wait << ","
+            << serv << "\n";
+
+        tempFinish.push(o);
+    }
+    while (tempFinish.pop(o)) finishedOrders.push(o);
+
+    // --- cancelled orders (LinkedQueue — dequeue then restore) ---
+    LinkedQueue<Order*> tempCancel;
+    while (cancelledOrders.dequeue(o))
+    {
+        string typ = o->getType();
+        if (typ == "Combo") typ = "OC";
+
+        int wait = (o->getTw() != -1) ? o->getTw() : 0;
+        int serv = (o->getTserv() != -1) ? o->getTserv() : 0;
+
+        csv << o->getID() << "," << typ << ","
+            << o->getTQ() << "," << o->getTA() << ","
+            << o->getTR() << "," << o->getTS() << ","
+            << o->getTF() << "," << wait << ","
+            << serv << "\n";
+
+        tempCancel.enqueue(o);
+    }
+    while (tempCancel.dequeue(o)) cancelledOrders.enqueue(o);
+
+    csv.close();
+    return true;
+}
+
+void Restaurant::LaunchDashboard()
+{
+    cout << "\n========================================\n";
+    cout << "  Simulation Complete!\n";
+    cout << "========================================\n";
+    cout << "Would you like to visualize the results? (yes/no): ";
+
+    string answer;
+    cin >> answer;
+
+    // Accept y, yes, Y, Yes, YES
+    if (answer == "yes" || answer == "y" || answer == "Y" || answer == "Yes" || answer == "YES")
+    {
+        cout << "\nLaunching Analytics Dashboard...\n";
+        cout << "Opening in your default browser at http://localhost:8501\n";
+        cout << "Press Ctrl+C in this window to stop the dashboard.\n\n";
+        system("py -m streamlit run dashboard.py --server.headless true");
+    }
+    else
+    {
+        cout << "\nSkipped. You can launch the dashboard later with:\n";
+        cout << "  py -m streamlit run dashboard.py\n\n";
+    }
+}
